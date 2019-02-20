@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<configuration>
+  <configSections>
+    <sectionGroup name="lnf">
+      <section name="providers" type="LNF.ProvidersSection, LNF"/>
+      <section name="redis" type="LNF.Impl.Redis.RedisConfigurationSection, LNF.Impl"/>
+    </sectionGroup>
+  </configSections>
+
+  <lnf>
+    <providers production="false">
+      <context type="LNF.Impl.WebContextProvider, LNF.Impl" loginUrl="/login"/>
+      <dataAccess type="LNF.Impl.NHibernateWebDataAccess, LNF.Impl" showSql="true"/>
+      <serialization type="LNF.Impl.Serialization.SerializationProvider, LNF.Impl"/>
+      <email type="LNF.Impl.Email.EmailProvider, LNF.Impl" host="127.0.0.1" log="true"/>
+      <control type="LNF.Impl.Control.Wago.WagoControl, LNF.Impl" host="http://wagosvr:7778/"/>
+      <log type="LNF.Impl.Logging.ServiceLogProvider, LNF.Impl" name="sselUser" enabled="true"/>
+      <modelFactory type="LNF.Impl.ModelFactory.ValueInjecterModelFactory, LNF.Impl"/>
+    </providers>
+    <redis>
+      <connection host="cachesvr" databaseId="5"/>
+    </redis>
+  </lnf>
+
+  <connectionStrings>
+    <add name="cnSselData" connectionString="*****"/>
+  </connectionStrings>
+
+  <appSettings>
+    <add key="AdminEmails" value="*****"/>
+    <add key="AllowSave" value="false"/>
+    <add key="ChangePasswordRedirect" value="/sselonline/Blank.aspx"/>
+    <add key="as:AudienceId" value="*****"/>
+    <add key="as:AudienceSecret" value="*****"/>
+    <add key="ApiHost" value="/webapi/"/>
+    <add key="MongoConnectionString" value="*****"/>
+  </appSettings>
+
+  <system.web>
+    <compilation debug="true" strict="false" explicit="true" targetFramework="4.6.1"/>
+    <httpRuntime targetFramework="4.6.1"/>
+
+    <authentication mode="Forms">
+      <forms name="sselAuth.cookie" path="/" loginUrl="/login" timeout="480" protection="All" slidingExpiration="true" cookieless="UseCookies" domain="umich.edu"/>
+    </authentication>
+
+    <authorization>
+      <deny users="?"/>
+    </authorization>
+
+    <machineKey compatibilityMode="Framework20SP2" validationKey="*****" decryptionKey="*****" validation="SHA1" decryption="3DES"/>
+
+    <customErrors mode="Off"/>
+  </system.web>
+</configuration>

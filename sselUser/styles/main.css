@@ -1,0 +1,41 @@
+﻿body
+{
+    font-size: 12pt;
+}
+.layout .left-panel
+{
+    width: 220px;
+}
+.grid th
+{
+    text-align: left;
+}
+.filter
+{
+    padding-top: 10px;
+    padding-left: 10px;
+}
+.filter select
+{
+    height: 24px;
+}
+.filter table
+{
+    border-collapse: collapse;
+    table-layout: fixed;
+}
+.filter table td
+{
+    padding-right: 5px;
+    padding-bottom: 10px;
+}
+.org-name
+{
+    color: #003366;
+    font-weight: bold;
+    font-size: 10pt;
+}
+.org-grid
+{
+    padding: 5px;
+}

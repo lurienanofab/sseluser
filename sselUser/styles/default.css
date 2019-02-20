@@ -1,0 +1,194 @@
+﻿h3
+{
+    margin-top: 3px;
+    font-size: 16pt;
+    font-weight: bold;
+    vertical-align: bottom;
+    color: #cc6600;
+    font-family: Palatino;
+    letter-spacing: 2px;
+}
+.Div20
+{
+    margin-left: 20px;
+    margin-top: 20px;
+    margin-right: 20px;
+}
+.NormalText
+{
+    font-family: Palatino;
+}
+.ButtonGroupHeader
+{
+    font-weight: bold;
+    font-size: medium;
+    color: navy;
+    font-family: 'Times New Roman';
+    text-align: center;
+}
+.CommandButton
+{
+    border-right: #663399 ridge;
+    border-top: #663399 ridge;
+    font-size: small;
+    border-left: #663399 ridge;
+    border-bottom: #663399 ridge;
+    font-family: Arial;
+    text-align: center;
+}
+.SaveButton, .QuitButton
+{
+    font-weight: bold;
+    font-size: small;
+    font-family: Arial;
+    text-align: center;
+}
+.SaveButton
+{
+    border-right: red 4px ridge;
+    border-top: red 4px ridge;
+    border-left: red 4px ridge;
+    color: red;
+    border-bottom: red 4px ridge;
+    background-color: #ffcccc;
+}
+.QuitButton
+{
+    border-right: green 4px ridge;
+    border-top: green 4px ridge;
+    border-left: green 4px ridge;
+    color: green;
+    border-bottom: green 4px ridge;
+    background-color: #ccff99;
+}
+.StoreButton, QuitStoreButton
+{
+    font-weight: bold;
+    font-size: x-small;
+    font-family: Arial;
+    text-align: center;
+}
+.StoreButton
+{
+    border-right: blue 2px ridge;
+    border-top: blue 2px ridge;
+    border-left: blue 2px ridge;
+    color: blue;
+    border-bottom: blue 2px ridge;
+    background-color: #ccccff;
+}
+.QuitStoreButton
+{
+    border-right: green 2px ridge;
+    border-top: green 2px ridge;
+    border-left: green 2px ridge;
+    color: green;
+    border-bottom: green 2px ridge;
+    background-color: #ccff99;
+}
+.CmdButton
+{
+    border-right: #00008B 1px solid;
+    border-top: #00008B 1px solid;
+    font-size: x-small;
+    margin: 1px;
+    border-left: #00008B 1px solid;
+    color: #00008B;
+    border-bottom: #00008B 1px solid;
+    font-family: Arial;
+    background-color: #F5F5F5;
+    text-align: center;
+}
+.PageHeader
+{
+    font-weight: bold;
+    font-size: large;
+    color: #0033ff;
+    font-family: 'Arial Black';
+    font-variant: small-caps;
+}
+.SectionHeader
+{
+    font-weight: bold;
+    font-size: medium;
+    color: #0033ff;
+    font-family: 'Arial Black';
+    font-variant: small-caps;
+}
+.LabelText
+{
+    font-size: small;
+    font-family: 'Times New Roman';
+}
+.DDLText
+{
+    font-size: small;
+    font-family: 'Arial';
+}
+.WarningText
+{
+    font-size: small;
+    color: red;
+    font-family: 'Times New Roman';
+}
+.MajorWarningText
+{
+    font-size: medium;
+    color: red;
+    font-family: 'Times New Roman';
+    font-weight: bold;
+}
+.GridText
+{
+    font-size: small;
+    font-family: 'Times New Roman';
+}
+.GridHeader
+{
+    font-weight: bold;
+    font-size: small;
+    font-family: 'Arial';
+}
+.CategoryBorder
+{
+    border-right: black 2px solid;
+}
+.HeaderWithRight
+{
+    border-right: black 2px solid;
+    border-bottom: black thick double;
+}
+.HeaderWithoutRight
+{
+    border-bottom: black thick double;
+}
+.HeaderText
+{
+    color: #cc6600;
+}
+#divGrid table, #divMultiOrg table
+{
+    border: none;
+    border-collapse: collapse;
+    font-size: 8pt;
+    font-family: verdana;
+    color: #696969;
+}
+#divGrid table th, #divMultiOrg table th
+{
+    color: #000000;
+    background-color: #DCDCDC;
+    border: 1px solid #DCDCDC;
+    border-bottom: none;
+    font-weight: bold;
+    padding: 3px;
+}
+#divGrid table td, #divMultiOrg table td
+{
+    color: #000000;
+    background-color: #EEEEEE;
+    border: 1px solid #DCDCDC;
+    border-top: none;
+    font-weight: normal;
+    padding: 3px;
+}

@@ -1,0 +1,60 @@
+﻿<%@ Master Language="VB" AutoEventWireup="false" CodeBehind="UserMaster.master.vb" Inherits="sselUser.UserMaster" %>
+
+<%@ Import Namespace="LNF" %>
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head runat="server">
+    <title>LNF User Data</title>
+    <link rel="stylesheet" type="text/css" href="//ssel-apps.eecs.umich.edu/static/styles/master.css" />
+    <link rel="stylesheet" type="text/css" href="styles/main.css" />
+    <script type="text/javascript" src="//ssel-apps.eecs.umich.edu/static/lib/json2/json2.js"></script>
+    <script type="text/javascript" src="//ssel-apps.eecs.umich.edu/static/lib/jquery/jquery.min.js"></script>
+    <script type="text/javascript" src="//ssel-apps.eecs.umich.edu/static/lib/js-cookie/js.cookie.js"></script>
+    <script type="text/javascript" src="//ssel-apps.eecs.umich.edu/static/scripts/jquery/jquery.scrollposition.js"></script>
+    <script type="text/javascript" src="//ssel-apps.eecs.umich.edu/static/scripts/jquery/jquery.numerictext.js"></script>
+    <asp:ContentPlaceHolder ID="head" runat="server">
+    </asp:ContentPlaceHolder>
+</head>
+<body>
+    <form id="form1" runat="server">
+        <div class="app">
+            <div class="main">
+                <table class="layout">
+                    <tr>
+                        <td style="vertical-align: top;" class="left-panel">
+                            <div class="no-bootstrap nav">
+                                <asp:HyperLink runat="server" ID="hypAppor" NavigateUrl="~/ApportionmentStep1.aspx" Text="Lab Time Apportionment"></asp:HyperLink>
+                                <asp:HyperLink runat="server" ID="hypApporDef" NavigateUrl="~/ApportionmentDefault.aspx" Text="Default Apportionment"></asp:HyperLink>
+                                <asp:HyperLink runat="server" ID="hypApporOld" NavigateUrl="~/ApportionmentOld.aspx" Text="Old Apportionment"></asp:HyperLink>
+                                <asp:HyperLink runat="server" ID="hypChangePW" NavigateUrl="~/ChangePassword.aspx" Text="Change Password"></asp:HyperLink>
+                                <asp:HyperLink runat="server" ID="hypExitApp" NavigateUrl="/sselOnline/Blank.aspx" Text="Exit Application"></asp:HyperLink>
+                            </div>
+                        </td>
+                        <td style="vertical-align: top;" class="right-panel">
+                            <asp:ContentPlaceHolder ID="ContentPlaceHolder1" runat="server">
+                            </asp:ContentPlaceHolder>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </form>
+    <asp:ContentPlaceHolder runat="server" ID="scripts">
+    </asp:ContentPlaceHolder>
+    <% If ServiceProvider.Current.IsProduction() Then%>
+    <script type="text/javascript">
+        var _gaq = _gaq || [];
+        _gaq.push(['_setAccount', 'UA-23459384-2']);
+        _gaq.push(['_trackPageview']);
+
+        (function () {
+            var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+            ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+            var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+        })();
+    </script>
+    <% End If%>
+</body>
+</html>
