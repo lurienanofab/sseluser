@@ -138,10 +138,6 @@ Public MustInherit Class ApportionmentPage
         If Not Page.IsPostBack Then
             '---------- First Load ----------
 
-            If UserID > 0 AndAlso Session("UpdateBilling") IsNot Nothing AndAlso Convert.ToBoolean(Session("UpdateBilling")) Then
-                UpdateBillingAsync(Period, UserID)
-            End If
-
             'Load the filter controls and set selected values
             SetupFilter()
 
@@ -200,7 +196,7 @@ Public MustInherit Class ApportionmentPage
         Return result
     End Function
 
-    Protected Sub UpdateBillingAsync(period As Date, clientId As Integer)
+    Protected Sub UpdateBillingData(period As Date, clientId As Integer)
         Dim startTime As Date = Date.Now
         Dim errors As New List(Of String)
 
@@ -503,8 +499,6 @@ Public MustInherit Class ApportionmentPage
         Session("MultipleOrg") = Nothing
         Session("LabUsageDay") = Nothing
 
-        Session("UpdateBilling") = UpdateBilling()
-
         '2009-07-04
         'I must use redirect as if we come to the page for the first time whenever user wants to get the data
         'The reason is due to a bug in asp.net that the dynamic grid view would lose its template control after databind for the second time.
@@ -520,6 +514,11 @@ Public MustInherit Class ApportionmentPage
         Dim selectedRoomId As Integer = Convert.ToInt32(ddlRoom.SelectedValue)
         Dim selectedMonth As Integer = Convert.ToInt32(ddlMonth.SelectedValue)
         Dim selectedYear As Integer = Convert.ToInt32(ddlYear.SelectedValue)
+
+        If selectedUserId > 0 AndAlso UpdateBilling() Then
+            Dim p As DateTime = New DateTime(selectedYear, selectedMonth, 1)
+            UpdateBillingData(p, selectedUserId)
+        End If
 
         Response.Redirect(String.Format("~/ApportionmentStep1.aspx?UserID={0}&RoomID={1}&Month={2}&Year={3}", selectedUserId, selectedRoomId, selectedMonth, selectedYear), False)
     End Sub

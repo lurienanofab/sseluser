@@ -206,10 +206,9 @@
 
             function recalcRoomBiling(callback) {
                 var data = {
-                    "StartPeriod": $this.data("start_date"),
-                    "EndPeriod": $this.data("end_date"),
+                    "Period": $this.data("start_date"),
                     "ClientID": $this.data("client_id"),
-                    "Command": 'room',
+                    "BillingCategory": 'room',
                     "Delete": true,
                     "IsTemp": false,
                     "Record": 0
