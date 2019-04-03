@@ -1,11 +1,25 @@
-﻿Imports LNF.Cache
-Imports LNF.Models.Data
+﻿Imports LNF.Models.Data
 Imports LNF.Repository
+Imports LNF.Web
 Imports sselUser.AppCode
 Imports sselUser.AppCode.DAL
 
 Public Class ApportionmentDefault
     Inherits Page
+
+    Private _contextBase As HttpContextBase
+
+    Protected ReadOnly Property ContextBase As HttpContextBase
+        Get
+            Return _contextBase
+        End Get
+    End Property
+
+    Protected ReadOnly Property CurrentUser As IClient
+        Get
+            Return ContextBase.CurrentUser()
+        End Get
+    End Property
 
     Public ReadOnly Property UserID As Integer
         Get
@@ -43,6 +57,7 @@ Public Class ApportionmentDefault
     End Property
 
     Protected Sub Page_Load(ByVal sender As Object, ByVal e As System.EventArgs) Handles Me.Load
+        _contextBase = New HttpContextWrapper(Context)
 
         'Always do this but only set TextBox values if Not IsPostBack
         ConstructGrid()
@@ -54,17 +69,17 @@ Public Class ApportionmentDefault
             Dim privs As Integer = Convert.ToInt32(ClientPrivilege.LabUser Or ClientPrivilege.Staff)
             Dim sDate As Date = Now
 
-            If CacheManager.Current.CurrentUser.HasPriv(ClientPrivilege.Administrator Or ClientPrivilege.Executive) Then
-                If CacheManager.Current.CurrentUser.HasPriv(ClientPrivilege.Administrator) Then
+            If CurrentUser.HasPriv(ClientPrivilege.Administrator Or ClientPrivilege.Executive) Then
+                If CurrentUser.HasPriv(ClientPrivilege.Administrator) Then
                     ddlUser.DataSource = AppCode.ClientManagerUtility.GetAllClientsByDateAndPrivs(sDate, sDate.AddMonths(1), privs)
-                ElseIf CacheManager.Current.CurrentUser.HasPriv(ClientPrivilege.Executive) Then
-                    ddlUser.DataSource = AppCode.ClientManagerUtility.GetClientsByManagerID(sDate, sDate.AddMonths(1), CacheManager.Current.CurrentUser.ClientID)
+                ElseIf CurrentUser.HasPriv(ClientPrivilege.Executive) Then
+                    ddlUser.DataSource = AppCode.ClientManagerUtility.GetClientsByManagerID(sDate, sDate.AddMonths(1), CurrentUser.ClientID)
                 End If
 
                 ddlUser.DataBind()
                 ddlUser.Items.Insert(0, New ListItem("-- Select --", "-1"))
             Else
-                ddlUser.Items.Add(New ListItem(CacheManager.Current.CurrentUser.DisplayName, CacheManager.Current.CurrentUser.ClientID.ToString()))
+                ddlUser.Items.Add(New ListItem(CurrentUser.DisplayName, CurrentUser.ClientID.ToString()))
                 ddlUser.SelectedIndex = 0 'only has himself
             End If
 

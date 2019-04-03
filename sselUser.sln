@@ -19,6 +19,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "sselUser.Tests", "sselUser.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LNF.Models", "..\lnf\LNF.Models\LNF.Models.csproj", "{98C7F73D-EF9D-4A87-8B79-A1208085CFBD}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LNF.Web", "..\lnf\LNF.Web\LNF.Web.csproj", "{F79683FF-E524-4107-A6E1-29579EE544E1}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LNF.Web.User", "LNF.Web.User\LNF.Web.User.csproj", "{0FBAE6B5-9F7D-43FD-AA32-19950BB4E957}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -74,8 +78,23 @@ Global
 		{98C7F73D-EF9D-4A87-8B79-A1208085CFBD}.Release|Any CPU.Build.0 = Release|Any CPU
 		{98C7F73D-EF9D-4A87-8B79-A1208085CFBD}.Staging|Any CPU.ActiveCfg = Release|Any CPU
 		{98C7F73D-EF9D-4A87-8B79-A1208085CFBD}.Staging|Any CPU.Build.0 = Release|Any CPU
+		{F79683FF-E524-4107-A6E1-29579EE544E1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F79683FF-E524-4107-A6E1-29579EE544E1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F79683FF-E524-4107-A6E1-29579EE544E1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F79683FF-E524-4107-A6E1-29579EE544E1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F79683FF-E524-4107-A6E1-29579EE544E1}.Staging|Any CPU.ActiveCfg = Staging|Any CPU
+		{F79683FF-E524-4107-A6E1-29579EE544E1}.Staging|Any CPU.Build.0 = Staging|Any CPU
+		{0FBAE6B5-9F7D-43FD-AA32-19950BB4E957}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0FBAE6B5-9F7D-43FD-AA32-19950BB4E957}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0FBAE6B5-9F7D-43FD-AA32-19950BB4E957}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0FBAE6B5-9F7D-43FD-AA32-19950BB4E957}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0FBAE6B5-9F7D-43FD-AA32-19950BB4E957}.Staging|Any CPU.ActiveCfg = Release|Any CPU
+		{0FBAE6B5-9F7D-43FD-AA32-19950BB4E957}.Staging|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {85D08974-C403-482D-B5A6-B13772373C6B}
 	EndGlobalSection
 EndGlobal

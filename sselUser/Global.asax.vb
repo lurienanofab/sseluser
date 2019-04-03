@@ -5,7 +5,8 @@ Public Class Global_asax
     Inherits HttpApplication
 
     Sub Application_Start(sender As Object, e As EventArgs)
-        ServiceProvider.Current = IOC.Resolver.GetInstance(Of ServiceProvider)()
+        Dim ioc As New IOC()
+        ServiceProvider.Current = ioc.Resolver.GetInstance(Of ServiceProvider)()
 
         If ServiceProvider.Current.IsProduction() Then
             Application("AppServer") = "http://" + Environment.MachineName + ".eecs.umich.edu/"

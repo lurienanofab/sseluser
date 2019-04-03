@@ -1,27 +1,41 @@
 ﻿Imports System.Configuration
+Imports System.Web
 Imports System.Web.UI
 Imports System.Web.UI.HtmlControls
 Imports System.Web.UI.WebControls
 Imports LNF
-Imports LNF.Billing
-Imports LNF.Cache
-Imports LNF.CommonTools
 Imports LNF.Models
+Imports LNF.Models.Billing
 Imports LNF.Models.Data
 Imports LNF.Repository
 Imports LNF.Repository.Data
+Imports LNF.Web
+Imports LNF.Web.User.Models
 Imports OnlineServices.Api
-Imports OnlineServices.Api.Billing
 Imports sselUser.AppCode.DAL
 
 Public MustInherit Class ApportionmentPage
     Inherits Page
 
+    Private _contextBase As HttpContextBase
+
     Protected OrgCount As Integer = 0
 
     Public MustOverride ReadOnly Property RoomDayReadOnly As Boolean
 
-    Protected ReadOnly Property ApportionmentManager As IApportionmentManager = ServiceProvider.Current.Use(Of IApportionmentManager)()
+    Protected ReadOnly Property ApportionmentManager As IApportionmentManager = ServiceProvider.Current.Billing.ApportionmentManager
+
+    Protected ReadOnly Property ContextBase As HttpContextBase
+        Get
+            Return _contextBase
+        End Get
+    End Property
+
+    Protected ReadOnly Property CurrentUser As IClient
+        Get
+            Return ContextBase.CurrentUser()
+        End Get
+    End Property
 
     Public ReadOnly Property UserID As Integer
         Get
@@ -111,6 +125,8 @@ Public MustInherit Class ApportionmentPage
     End Sub
 
     Protected Overrides Sub OnLoad(e As EventArgs)
+        _contextBase = New HttpContextWrapper(Context)
+
         Dim btnSave As Button = GetSaveButton()
         Dim chkBilling As CheckBox = GetBillingCheckBox()
         Dim ddlMonth As DropDownList = GetMonthDropDownList()
@@ -150,7 +166,7 @@ Public MustInherit Class ApportionmentPage
                 If UserUtility.IsWithinBusinessDays(DateTime.Now.Date) And Period = LastMonth Then
                     GetSaveButton().Enabled = True
                 Else
-                    If CacheManager.Current.CurrentUser.HasPriv(ClientPrivilege.Administrator) Then
+                    If CurrentUser.HasPriv(ClientPrivilege.Administrator) Then
                         btnSave.Enabled = True
                         chkBilling.Visible = True
                     End If
@@ -179,9 +195,15 @@ Public MustInherit Class ApportionmentPage
         MyBase.OnLoad(e)
     End Sub
 
-    Protected Sub SetLastBillingUpdateText(timeTaken As TimeSpan, errmsg As String)
+    Protected Sub SetLastBillingUpdateText(model As ApportionmentModel)
         If litLastBillingUpdate IsNot Nothing Then
-            litLastBillingUpdate.Text = String.Format("billing updated in {0:0.0} seconds", timeTaken.TotalSeconds)
+            Dim errmsg As String = String.Empty
+
+            If model.Errors.Count() > 0 Then
+                errmsg = String.Join(Environment.NewLine + Environment.NewLine, model.Errors)
+            End If
+
+            litLastBillingUpdate.Text = String.Format("billing updated in {0:0.0} seconds", model.TimeTaken.TotalSeconds)
             If Not String.IsNullOrEmpty(errmsg) Then
                 litLastBillingUpdate.Text += String.Format("<hr/><div style=""color: #aa0000; font-family: 'Courier New'; white-space: pre;"">{0}</div><hr/>", errmsg)
             End If
@@ -196,80 +218,6 @@ Public MustInherit Class ApportionmentPage
         Return result
     End Function
 
-    Protected Sub UpdateBillingData(period As Date, clientId As Integer)
-        Dim startTime As Date = Date.Now
-        Dim errors As New List(Of String)
-
-        Dim sd As Date = period
-        Dim ed As Date = period.AddMonths(1)
-
-        Dim bc As ProcessClient = New ProcessClient()
-
-        Dim success As Boolean = True
-
-        Try
-            bc.BillingProcessToolDataClean(sd, ed, clientId)
-        Catch ex As Exception
-            success = False
-            errors.Add(ex.Message)
-        End Try
-
-        Try
-            bc.BillingProcessRoomDataClean(sd, ed, clientId)
-        Catch ex As Exception
-            success = False
-            errors.Add(ex.Message)
-        End Try
-
-        Try
-            bc.BillingProcessToolData(sd, clientId, 0)
-        Catch ex As Exception
-            success = False
-            errors.Add(ex.Message)
-        End Try
-
-        Try
-            bc.BillingProcessRoomData(sd, clientId, 0)
-        Catch ex As Exception
-            success = False
-            errors.Add(ex.Message)
-        End Try
-
-        Dim temp = sd.FirstOfMonth() = Date.Now.FirstOfMonth()
-
-        Try
-            bc.BillingProcessToolStep1(sd, True, temp, clientId, 0)
-        Catch ex As Exception
-            success = False
-            errors.Add(ex.Message)
-        End Try
-
-        Try
-            bc.BillingProcessRoomStep1(sd, True, temp, clientId, 0)
-        Catch ex As Exception
-            success = False
-            errors.Add(ex.Message)
-        End Try
-
-        If Not temp Then
-            Try
-                bc.BillingProcessStep4("subsidy", sd, clientId)
-            Catch ex As Exception
-                success = False
-                errors.Add(ex.Message)
-            End Try
-        End If
-
-        Session.Remove("UpdateBilling")
-
-        Dim errmsg As String = String.Empty
-        If errors.Count > 0 Then
-            errmsg = String.Join(Environment.NewLine + Environment.NewLine, errors)
-        End If
-
-        SetLastBillingUpdateText(Date.Now - startTime, errmsg)
-    End Sub
-
     ''' <summary>
     ''' The ActiveAccounts table must be stored in Session because it's required to re-generate the grid
     ''' dynamically on every postback. The dilemma here is we won't be able to get the current user selected
@@ -277,7 +225,7 @@ Public MustInherit Class ApportionmentPage
     ''' </summary>
     Protected Overridable Sub CreateCurrentActiveAccountsTable()
         If Session("CurrentAcct") Is Nothing OrElse Session("MultipleOrg") Is Nothing OrElse Request.QueryString("Reload") = "1" Then
-            If Period <> DateTime.MinValue Then
+            If Period <> Date.MinValue Then
                 Dim ds As DataSet = RoomApportionmentInDaysMonthlyDA.GetAllAccountsUsed(Period, UserID, RoomID)
                 Session("CurrentAcct") = ds.Tables(0)
                 Session("MultipleOrg") = ds.Tables(1)
@@ -301,6 +249,8 @@ Public MustInherit Class ApportionmentPage
 
         Dim rows As DataRow() = dtCurrentAcct.Select(String.Format("OrgID = {0}", orgId))
 
+        Dim textBoxIds As New List(Of String)
+
         'for each active account, we also create a column and create a control into that column
         For Each dr As DataRow In rows
             tf = New TemplateField()
@@ -315,7 +265,12 @@ Public MustInherit Class ApportionmentPage
 
             tf.HeaderStyle.Width = Unit.Pixel(100)
             tf.HeaderStyle.HorizontalAlign = HorizontalAlign.Center
-            Dim template As DynamicTextBoxTemplate = New DynamicTextBoxTemplate("txt" + dr("AccountID").ToString(), Unit.Pixel(50), 5, "numeric-text account-day-text")
+            Dim txtBoxId As String = $"txt{dr("AccountID")}"
+            If textBoxIds.Contains(txtBoxId) Then
+                Throw New Exception($"A control with ID {txtBoxId} has already been added.")
+            End If
+            Dim template As DynamicTextBoxTemplate = New DynamicTextBoxTemplate(txtBoxId, Unit.Pixel(50), 5, "numeric-text account-day-text")
+            textBoxIds.Add(txtBoxId)
             template.AddAttribute("data-account-id", dr("AccountID").ToString())
             template.AddAttribute("data-org-id", dr("OrgID").ToString())
             tf.ItemTemplate = template
@@ -374,18 +329,18 @@ Public MustInherit Class ApportionmentPage
         ddlYear.DataSource = UserUtility.YearsData(3)
         ddlYear.DataBind()
 
-        If CacheManager.Current.CurrentUser.HasPriv(ClientPrivilege.Administrator Or ClientPrivilege.Executive) Then
-            If CacheManager.Current.CurrentUser.HasPriv(ClientPrivilege.Administrator) Then
+        If CurrentUser.HasPriv(ClientPrivilege.Administrator Or ClientPrivilege.Executive) Then
+            If CurrentUser.HasPriv(ClientPrivilege.Administrator) Then
                 ddlUser.DataSource = ClientManagerUtility.GetAllClientsByDateAndPrivs(sDate, sDate.AddMonths(1), privs)
-            ElseIf CacheManager.Current.CurrentUser.HasPriv(ClientPrivilege.Executive) Then
-                ddlUser.DataSource = ClientManagerUtility.GetClientsByManagerID(sDate, sDate.AddMonths(1), CacheManager.Current.CurrentUser.ClientID)
+            ElseIf CurrentUser.HasPriv(ClientPrivilege.Executive) Then
+                ddlUser.DataSource = ClientManagerUtility.GetClientsByManagerID(sDate, sDate.AddMonths(1), CurrentUser.ClientID)
             End If
 
             ddlUser.DataBind()
 
             ddlUser.Items.Insert(0, New ListItem("-- Select ---", "-1"))
         Else
-            ddlUser.Items.Add(New ListItem(CacheManager.Current.CurrentUser.DisplayName, CacheManager.Current.CurrentUser.ClientID.ToString()))
+            ddlUser.Items.Add(New ListItem(CurrentUser.DisplayName, CurrentUser.ClientID.ToString()))
             ddlUser.SelectedIndex = 0 ' only has himself
         End If
 
@@ -437,56 +392,56 @@ Public MustInherit Class ApportionmentPage
         Dim litPhysicalDays As Literal = GetPhysicalDaysMessage()
         Dim panDisplay As Panel = GetDisplayPanel()
 
-        Try
-            'This is real data assignment, the data bounded object is just a dummy object. Here we get what users truly want to see
-            'Get data from Apportionment table to get the true chargedays values (we always assume the apportionment table has the accurate data)
+        'Try
+        'This is real data assignment, the data bounded object is just a dummy object. Here we get what users truly want to see
+        'Get data from Apportionment table to get the true chargedays values (we always assume the apportionment table has the accurate data)
 
-            Dim dsApp As DataSet = GetLabUsageDaysData()
-            Dim dtApp As DataTable = dsApp.Tables(0)
-            Dim dtPhysicalDates As DataTable = dsApp.Tables(1) 'it contains all the dates in a month where we should charge room fee
+        Dim dsApp As DataSet = GetLabUsageDaysData()
+        Dim dtApp As DataTable = dsApp.Tables(0)
+        Dim dtPhysicalDates As DataTable = dsApp.Tables(1) 'it contains all the dates in a month where we should charge room fee
 
 
-            'Loop through each row to populate the TextBox.
-            'There is never more than 1 row in the GridView. (because each account is an additional column)
+        'Loop through each row to populate the TextBox.
+        'There is never more than 1 row in the GridView. (because each account is an additional column)
 
-            Dim physicalDays As Integer = ApportionmentManager.GetPhysicalDays(Period, UserID, RoomID)
-            Dim minimumDays As Integer = 0
+        Dim physicalDays As Integer = ApportionmentManager.GetPhysicalDays(Period, UserID, RoomID)
+        Dim minimumDays As Integer = 0
 
-            If gvOrg.Rows.Count > 0 Then
+        If gvOrg.Rows.Count > 0 Then
 
-                Dim lblMinDays As Label = CType(gvOrg.Rows(0).FindControl("lblMinDays"), Label)
-                Dim hidOrgID As HiddenField = CType(gvOrg.Rows(0).FindControl("hidOrgID"), HiddenField)
-                Dim orgId As Integer = Integer.Parse(hidOrgID.Value)
+            Dim lblMinDays As Label = CType(gvOrg.Rows(0).FindControl("lblMinDays"), Label)
+            Dim hidOrgID As HiddenField = CType(gvOrg.Rows(0).FindControl("hidOrgID"), HiddenField)
+            Dim orgId As Integer = Integer.Parse(hidOrgID.Value)
 
-                ' Minimum days is the number of tool usage days per Org
-                minimumDays = ApportionmentManager.GetMinimumDays(Period, UserID, RoomID, orgId)
+            ' Minimum days is the number of tool usage days per Org
+            minimumDays = ApportionmentManager.GetMinimumDays(Period, UserID, RoomID, orgId)
 
-                For Each dr As DataRow In dtApp.Select(String.Format("OrgID = {0}", orgId))
-                    Dim txt As TextBox = CType(gvOrg.Rows(0).FindControl("txt" + dr("AccountID").ToString()), TextBox)
-                    If txt IsNot Nothing Then
-                        If Not Page.IsPostBack OrElse RoomDayReadOnly Then
-                            txt.Text = Math.Round(dr.Field(Of Decimal)("ChargeDays"), 2).ToString()
-                        End If
-                        If RoomDayReadOnly Then
-                            txt.ReadOnly = True
-                            txt.Enabled = False
-                        End If
+            For Each dr As DataRow In dtApp.Select(String.Format("OrgID = {0}", orgId))
+                Dim txt As TextBox = CType(gvOrg.Rows(0).FindControl("txt" + dr("AccountID").ToString()), TextBox)
+                If txt IsNot Nothing Then
+                    If Not Page.IsPostBack OrElse RoomDayReadOnly Then
+                        txt.Text = Math.Round(dr.Field(Of Decimal)("ChargeDays"), 2).ToString()
                     End If
-                Next
-
-                Dim dtMultipleOrg As DataTable = CType(Session("MultipleOrg"), DataTable)
-                If dtMultipleOrg.Rows.Count = 1 OrElse physicalDays < minimumDays Then 'minimum days = sum of account days (per org)
-                    lblMinDays.Text = physicalDays.ToString()
-                Else
-                    lblMinDays.Text = minimumDays.ToString()
+                    If RoomDayReadOnly Then
+                        txt.ReadOnly = True
+                        txt.Enabled = False
+                    End If
                 End If
-            End If
+            Next
 
-            litPhysicalDays.Text = physicalDays.ToString()
-        Catch ex As Exception
-            SetMessage1("<div style=""border-bottom: solid 1px #D2D2D2; padding-bottom: 5px;"">An error has occurred:</div><pre>" + ex.Message + Environment.NewLine + ex.StackTrace + "</pre><div style=""border-top: solid 1px #D2D2D2; padding-top: 5px;"">Please contact the system administrator.</div>")
-            panDisplay.Visible = False
-        End Try
+            Dim dtMultipleOrg As DataTable = CType(Session("MultipleOrg"), DataTable)
+            If dtMultipleOrg.Rows.Count = 1 OrElse physicalDays < minimumDays Then 'minimum days = sum of account days (per org)
+                lblMinDays.Text = physicalDays.ToString()
+            Else
+                lblMinDays.Text = minimumDays.ToString()
+            End If
+        End If
+
+        litPhysicalDays.Text = physicalDays.ToString()
+        'Catch ex As Exception
+        '    SetMessage1("<div style=""border-bottom: solid 1px #D2D2D2; padding-bottom: 5px;"">An error has occurred:</div><pre>" + ex.Message + Environment.NewLine + ex.StackTrace + "</pre><div style=""border-top: solid 1px #D2D2D2; padding-top: 5px;"">Please contact the system administrator.</div>")
+        '    panDisplay.Visible = False
+        'End Try
     End Sub
 
     Protected Overridable Sub OnGetData(e As EventArgs)
@@ -516,8 +471,11 @@ Public MustInherit Class ApportionmentPage
         Dim selectedYear As Integer = Convert.ToInt32(ddlYear.SelectedValue)
 
         If selectedUserId > 0 AndAlso UpdateBilling() Then
-            Dim p As DateTime = New DateTime(selectedYear, selectedMonth, 1)
-            UpdateBillingData(p, selectedUserId)
+            Dim p As Date = New DateTime(selectedYear, selectedMonth, 1)
+            Session.Remove("UpdateBilling")
+            Dim model As New ApportionmentModel(ServiceProvider.Current) With {.Period = p, .ClientID = selectedUserId}
+            model.UpdateBillingData()
+            SetLastBillingUpdateText(model)
         End If
 
         Response.Redirect(String.Format("~/ApportionmentStep1.aspx?UserID={0}&RoomID={1}&Month={2}&Year={3}", selectedUserId, selectedRoomId, selectedMonth, selectedYear), False)
@@ -564,7 +522,7 @@ Public MustInherit Class ApportionmentPage
             If GetPercentageRadio().Checked Then
                 For Each cell As TableCell In gvr.Cells
                     Dim txt As TextBox = Nothing
-                    For Each ctrl As System.Web.UI.Control In cell.Controls
+                    For Each ctrl As Control In cell.Controls
                         If ctrl.GetType().Equals(GetType(TextBox)) Then
                             txt = CType(ctrl, TextBox)
                             Exit For

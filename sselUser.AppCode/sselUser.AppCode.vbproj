@@ -128,6 +128,10 @@
       <Project>{85be7662-47c8-4e82-8090-3f2bd61cc0f7}</Project>
       <Name>LNF.WebApi</Name>
     </ProjectReference>
+    <ProjectReference Include="..\..\lnf\LNF.Web\LNF.Web.csproj">
+      <Project>{f79683ff-e524-4107-a6e1-29579ee544e1}</Project>
+      <Name>LNF.Web</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\LNF\LNF\LNF.csproj">
       <Project>{e3b73410-869b-4ba2-99ac-ad6708a27ade}</Project>
       <Name>LNF</Name>
@@ -135,6 +139,10 @@
     <ProjectReference Include="..\..\lnf\OnlineServices.Api\OnlineServices.Api.csproj">
       <Project>{d0c76fe8-7233-4da5-b106-8e4f51a32ad2}</Project>
       <Name>OnlineServices.Api</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\LNF.Web.User\LNF.Web.User.csproj">
+      <Project>{0fbae6b5-9f7d-43fd-aa32-19950bb4e957}</Project>
+      <Name>LNF.Web.User</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.VisualBasic.targets" />

@@ -1,8 +1,8 @@
 ﻿Imports System.Data.SqlClient
-Imports LNF.Cache
 Imports LNF.CommonTools
 Imports LNF.Models.Data
 Imports LNF.Repository
+Imports LNF.Web
 Imports sselUser.AppCode
 Imports sselUser.AppCode.DAL
 
@@ -10,6 +10,9 @@ Public Class ApportionmentOld
     Inherits System.Web.UI.Page
 
     Private Const shiftCols As Integer = 3 ' columns in dg to left of first column of boxes
+
+    Private _contextBase As HttpContextBase
+
     Private dsReport As DataSet
     Private sDate, eDate As DateTime
 
@@ -32,7 +35,21 @@ Public Class ApportionmentOld
         Other = 99
     End Enum
 
+    Protected ReadOnly Property ContextBase As HttpContextBase
+        Get
+            Return _contextBase
+        End Get
+    End Property
+
+    Protected ReadOnly Property CurrentUser As IClient
+        Get
+            Return ContextBase.CurrentUser()
+        End Get
+    End Property
+
     Protected Sub Page_PreInit(ByVal sender As Object, ByVal e As System.EventArgs) Handles Me.PreInit
+        _contextBase = New HttpContextWrapper(Context)
+
         '2009-06-23 Get the billing type and see if this user shoud use the new system or old system
         Dim dt As DataTable = BillingTypeDA.GetBillingTypeID(CType(Session("ClientID"), Integer))
 
@@ -56,7 +73,7 @@ Public Class ApportionmentOld
     End Sub
 
     Private Sub Page_Load(sender As Object, e As EventArgs) Handles Me.Load
-        If Not CacheManager.Current.CurrentUser.HasPriv(AuthTypes) Then
+        If Not CurrentUser.HasPriv(AuthTypes) Then
             Session.Abandon()
             Response.Redirect(Session("Logout").ToString() + "?Action=Exit")
         End If
@@ -151,7 +168,7 @@ Public Class ApportionmentOld
         Dim currentPeriod As New DateTime(Now.Year, Now.Month, 1)
 
         'now we want to see if we should allow the user to modify the data
-        If CacheManager.Current.CurrentUser.HasPriv(ClientPrivilege.Developer) Then
+        If CurrentUser.HasPriv(ClientPrivilege.Developer) Then
             '2008-01-14 allow only developer to modify past data
             Session("AllowEdit") = True
         Else
@@ -174,11 +191,11 @@ Public Class ApportionmentOld
         'client info - gets put into ddl, not needed in dataset
         Dim privs As Integer = Convert.ToInt32(ClientPrivilege.LabUser Or ClientPrivilege.Staff)
 
-        If CacheManager.Current.CurrentUser.HasPriv(ClientPrivilege.Administrator Or ClientPrivilege.Executive) Then
-            If CacheManager.Current.CurrentUser.HasPriv(ClientPrivilege.Administrator) Then
+        If CurrentUser.HasPriv(ClientPrivilege.Administrator Or ClientPrivilege.Executive) Then
+            If CurrentUser.HasPriv(ClientPrivilege.Administrator) Then
                 ddlUser.DataSource = AppCode.ClientManagerUtility.GetAllClientsByDateAndPrivs(sDate, eDate, privs)
-            ElseIf CacheManager.Current.CurrentUser.HasPriv(ClientPrivilege.Executive) Then
-                ddlUser.DataSource = AppCode.ClientManagerUtility.GetClientsByManagerID(sDate, eDate, CacheManager.Current.CurrentUser.ClientID)
+            ElseIf CurrentUser.HasPriv(ClientPrivilege.Executive) Then
+                ddlUser.DataSource = AppCode.ClientManagerUtility.GetClientsByManagerID(sDate, eDate, CurrentUser.ClientID)
             End If
 
             ddlUser.DataBind()
@@ -192,7 +209,7 @@ Public Class ApportionmentOld
                 ddlUser.SelectedValue = selectedUser.ToString()
             End If
         Else
-            ddlUser.Items.Add(New ListItem(CacheManager.Current.CurrentUser.DisplayName, CacheManager.Current.CurrentUser.ClientID.ToString()))
+            ddlUser.Items.Add(New ListItem(CurrentUser.DisplayName, CurrentUser.ClientID.ToString()))
             ddlUser.SelectedIndex = 0 ' only has himself
         End If
 

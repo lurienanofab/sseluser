@@ -1,17 +1,33 @@
-﻿Imports LNF.Cache
-Imports LNF.CommonTools
+﻿Imports LNF.CommonTools
 Imports LNF.Models.Data
 Imports LNF.Repository
+Imports LNF.Web
 
 Public Class ChangePassword
     Inherits Page
 
+    Private _contextBase As HttpContextBase
+
+    Protected ReadOnly Property ContextBase As HttpContextBase
+        Get
+            Return _contextBase
+        End Get
+    End Property
+
+    Protected ReadOnly Property CurrentUser As IClient
+        Get
+            Return ContextBase.CurrentUser()
+        End Get
+    End Property
+
     Protected Sub Page_Load(ByVal sender As Object, ByVal e As System.EventArgs) Handles Me.Load
+        _contextBase = New HttpContextWrapper(Context)
+
         'only these privs can change password
         Dim AuthTypes As ClientPrivilege = ClientPrivilege.LabUser Or ClientPrivilege.Staff Or ClientPrivilege.StoreUser Or ClientPrivilege.Executive Or ClientPrivilege.Administrator Or ClientPrivilege.WebSiteAdmin Or ClientPrivilege.StoreManager Or ClientPrivilege.OnlineAccess
 
         litAuthMsg.Text = String.Empty
-        If Not CacheManager.Current.CurrentUser.HasPriv(AuthTypes) Then
+        If Not CurrentUser.HasPriv(AuthTypes) Then
             panDisplay.Visible = False
             litAuthMsg.Text = "<div class=""error"" style=""padding-left: 5px;"">You do not have authorization to change your password. Please contact the system administrator if you have any questions.</div>"
         End If

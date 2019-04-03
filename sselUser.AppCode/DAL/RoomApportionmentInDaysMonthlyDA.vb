@@ -64,7 +64,7 @@ Namespace DAL
                 dtRoomBilling.Rows.Add(ndr)
             Next
 
-            Dim orgs = query.Select(Function(x) New With {.OrgID = x.OrgID, .OrgName = x.GetOrg().OrgName}).ToList()
+            Dim orgs = query.Select(Function(x) New With {x.OrgID, x.GetOrg().OrgName}).ToList()
             Dim distinctOrgs = orgs.Distinct(orgs.CreateEqualityComparer(Function(x, y) x.OrgID = y.OrgID, Function(x) x.OrgID.GetHashCode())).ToList()
 
             For Each o In distinctOrgs

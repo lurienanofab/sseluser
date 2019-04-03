@@ -1,9 +1,9 @@
 ﻿Imports LNF
-Imports LNF.Billing
+Imports LNF.Models.Billing
 Imports LNF.Repository.Data
 
 Public Class RoomEntryApportionmentItem
-    Private Shared ReadOnly Property ApportionmentManager As IApportionmentManager = ServiceProvider.Current.Use(Of IApportionmentManager)()
+    Private Shared ReadOnly Property ApportionmentManager As IApportionmentManager = ServiceProvider.Current.Billing.ApportionmentManager
 
     Public Property Period As DateTime
     Public Property ClientID As Integer
