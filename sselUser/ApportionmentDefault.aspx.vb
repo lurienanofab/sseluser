@@ -1,4 +1,5 @@
-﻿Imports LNF.Models.Data
+﻿Imports LNF
+Imports LNF.Data
 Imports LNF.Repository
 Imports LNF.Web
 Imports sselUser.AppCode
@@ -9,6 +10,8 @@ Public Class ApportionmentDefault
 
     Private _contextBase As HttpContextBase
 
+    <Inject> Public Property Provider As IProvider
+
     Protected ReadOnly Property ContextBase As HttpContextBase
         Get
             Return _contextBase
@@ -17,7 +20,7 @@ Public Class ApportionmentDefault
 
     Protected ReadOnly Property CurrentUser As IClient
         Get
-            Return ContextBase.CurrentUser()
+            Return ContextBase.CurrentUser(Provider)
         End Get
     End Property
 
@@ -71,9 +74,9 @@ Public Class ApportionmentDefault
 
             If CurrentUser.HasPriv(ClientPrivilege.Administrator Or ClientPrivilege.Executive) Then
                 If CurrentUser.HasPriv(ClientPrivilege.Administrator) Then
-                    ddlUser.DataSource = AppCode.ClientManagerUtility.GetAllClientsByDateAndPrivs(sDate, sDate.AddMonths(1), privs)
+                    ddlUser.DataSource = ClientManagerUtility.GetAllClientsByDateAndPrivs(sDate, sDate.AddMonths(1), privs)
                 ElseIf CurrentUser.HasPriv(ClientPrivilege.Executive) Then
-                    ddlUser.DataSource = AppCode.ClientManagerUtility.GetClientsByManagerID(sDate, sDate.AddMonths(1), CurrentUser.ClientID)
+                    ddlUser.DataSource = ClientManagerUtility.GetClientsByManagerID(sDate, sDate.AddMonths(1), CurrentUser.ClientID)
                 End If
 
                 ddlUser.DataBind()
@@ -293,7 +296,7 @@ Public Class ApportionmentDefault
         For Each dr As DataRow In parents
             Dim item As New RoomItem() With {
                 .RoomID = dr.Field(Of Integer)("RoomID"),
-                .RoomName = dr.Field(Of String)("Room"),
+                .RoomName = UserUtility.GetRoomName(dr),
                 .SortOrder = sortOrder
             }
             result.Add(item)
@@ -305,7 +308,7 @@ Public Class ApportionmentDefault
         For Each dr As DataRow In children
             Dim item As New RoomItem() With {
                 .RoomID = dr.Field(Of Integer)("RoomID"),
-                .RoomName = dr.Field(Of String)("Room"),
+                .RoomName = UserUtility.GetRoomName(dr),
                 .SortOrder = sortOrder
             }
             result.Add(item)

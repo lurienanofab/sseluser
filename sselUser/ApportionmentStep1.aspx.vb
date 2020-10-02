@@ -72,6 +72,10 @@ Public Class ApportionmentStep1
     End Function
 
     Protected Sub Page_Load(sender As Object, e As EventArgs) Handles Me.Load
+        If Request.QueryString("ThrowError") = "1" Then
+            Throw New Exception("This is a test error.")
+        End If
+
         hypViewEntryApportionment.NavigateUrl = String.Format("~/ApportionmentStep2.aspx?UserID={0}&RoomID={1}&Month={2}&Year={3}", UserID, RoomID, Month, Year)
     End Sub
 
@@ -215,7 +219,7 @@ Public Class ApportionmentStep1
                   cfg.Update.AddParameter("@IsDefault", SqlDbType.Bit)
               End Sub
 
-        If DA.Command().Update(dtApportFromDB, act) >= 0 Then
+        If DefaultDataCommand.Create().Update(dtApportFromDB, act) >= 0 Then
             SetMessage("The apportionment data is saved.")
         Else
             SetMessage("Saving data failed, please contact the administrator (Help menu)")
@@ -237,10 +241,10 @@ Public Class ApportionmentStep1
                   cfg.Update.AddParameter("ChargeDays", SqlDbType.Float)
               End Sub
 
-        DA.Command().Update(dtUserApportFromDB, act)
+        DefaultDataCommand.Create().Update(dtUserApportFromDB, act)
 
         'update child room entry apportionment based on room days
-        ApportionmentManager.UpdateChildRoomEntryApportionment(Period, UserID, RoomID)
+        Provider.Billing.Apportionment.UpdateChildRoomEntryApportionment(Period, UserID, RoomID)
 
         ' [jg 2016-09-15] This is now handled after the redirect to ApportionmentStep2.aspx
         'If chkBilling.Checked Then

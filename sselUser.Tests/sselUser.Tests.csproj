@@ -65,10 +65,6 @@
       <Project>{7a6cd165-0c48-4680-9a49-281688eb1cd8}</Project>
       <Name>LNF.Impl</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\lnf\LNF.Models\LNF.Models.csproj">
-      <Project>{98c7f73d-ef9d-4a87-8b79-a1208085cfbd}</Project>
-      <Name>LNF.Models</Name>
-    </ProjectReference>
     <ProjectReference Include="..\..\lnf\LNF.WebApi\LNF.WebApi.csproj">
       <Project>{85be7662-47c8-4e82-8090-3f2bd61cc0f7}</Project>
       <Name>LNF.WebApi</Name>

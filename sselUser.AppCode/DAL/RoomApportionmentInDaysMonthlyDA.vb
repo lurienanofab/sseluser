@@ -1,9 +1,8 @@
 ﻿Imports LNF.Billing
 Imports LNF.CommonTools
 Imports LNF.Data
+Imports LNF.Impl.Repository.Billing
 Imports LNF.Repository
-Imports LNF.Repository.Billing
-Imports LNF.Repository.Data
 
 Namespace DAL
     Public Class RoomApportionmentInDaysMonthlyDA
@@ -14,7 +13,7 @@ Namespace DAL
         ''' #3 table: User's Apportion Data
         ''' </summary>
         Public Shared Function GetData(ByVal period As Date, ByVal clientId As Integer, ByVal roomId As Integer) As DataSet
-            Return DA.Command() _
+            Return DefaultDataCommand.Create() _
                 .Param("Action", "ForApportion") _
                 .Param("Period", period) _
                 .Param("ClientID", clientId) _
@@ -53,12 +52,12 @@ Namespace DAL
             For Each rb As RoomBilling In query
                 Dim ndr As DataRow = dtRoomBilling.NewRow()
 
-                Dim org As Org = rb.GetOrg()
-                Dim acct As Account = rb.GetAccount()
+                Dim org As IOrg = rb.GetOrg()
+                Dim acct As IAccount = rb.GetAccount()
 
                 ndr.SetField("AccountID", rb.AccountID)
-                ndr.SetField("Name", acct.Name)
-                ndr.SetField("Number", acct.Number)
+                ndr.SetField("Name", acct.AccountName)
+                ndr.SetField("Number", acct.AccountNumber)
                 ndr.SetField("OrgID", rb.OrgID)
                 ndr.SetField("OrgName", org.OrgName)
                 dtRoomBilling.Rows.Add(ndr)
@@ -88,18 +87,20 @@ Namespace DAL
         ''' Get PhysicalDays and AccountDays for this account.  This is used when new account is discovered and has not been added to apportionment table
         ''' </summary>
         Public Shared Function GetAccountDaysAndPhysicalDays(ByVal Period As Date, ByVal ClientID As Integer, ByVal RoomID As Integer, ByVal AccountID As Integer) As ArrayList
-            Dim dc As DataCommandBase = DA.Command() _
+            Dim dc As IDataCommand = DefaultDataCommand.Create() _
                 .Param("Action", "ForApportion") _
                 .Param("Period", Period) _
                 .Param("ClientID", ClientID) _
                 .Param("RoomID", RoomID) _
                 .Param("AccountID", AccountID)
 
-            Using reader As IDataReader = dc.ExecuteReader("RoomApportionmentInDaysMonthly_Select")
+            Using reader As ExecuteReaderResult = dc.ExecuteReader("RoomApportionmentInDaysMonthly_Select")
                 If reader.Read() Then
-                    Dim arr As New ArrayList
-                    arr.Add(reader("PhysicalDays"))
-                    arr.Add(reader("AccountDays"))
+                    Dim arr As New ArrayList From {
+                        reader("PhysicalDays"),
+                        reader("AccountDays")
+                    }
+
                     Return arr
                 Else
                     Return Nothing

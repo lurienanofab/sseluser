@@ -1,20 +1,23 @@
 ﻿Imports System.Data.SqlClient
+Imports LNF
 Imports LNF.CommonTools
-Imports LNF.Models.Data
+Imports LNF.Data
 Imports LNF.Repository
 Imports LNF.Web
 Imports sselUser.AppCode
 Imports sselUser.AppCode.DAL
 
 Public Class ApportionmentOld
-    Inherits System.Web.UI.Page
+    Inherits Page
 
     Private Const shiftCols As Integer = 3 ' columns in dg to left of first column of boxes
 
     Private _contextBase As HttpContextBase
 
     Private dsReport As DataSet
-    Private sDate, eDate As DateTime
+    Private sDate, eDate As Date
+
+    <Inject> Public Property Provider As IProvider
 
     Private cnSselData As New SqlConnection(ConfigurationManager.ConnectionStrings("cnSselData").ConnectionString)
 
@@ -43,7 +46,7 @@ Public Class ApportionmentOld
 
     Protected ReadOnly Property CurrentUser As IClient
         Get
-            Return ContextBase.CurrentUser()
+            Return ContextBase.CurrentUser(Provider)
         End Get
     End Property
 

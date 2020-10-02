@@ -1,5 +1,6 @@
-﻿Imports LNF.CommonTools
-Imports LNF.Models.Data
+﻿Imports LNF
+Imports LNF.CommonTools
+Imports LNF.Data
 Imports LNF.Repository
 Imports LNF.Web
 
@@ -7,6 +8,8 @@ Public Class ChangePassword
     Inherits Page
 
     Private _contextBase As HttpContextBase
+
+    <Inject> Public Property Provider As IProvider
 
     Protected ReadOnly Property ContextBase As HttpContextBase
         Get
@@ -16,7 +19,7 @@ Public Class ChangePassword
 
     Protected ReadOnly Property CurrentUser As IClient
         Get
-            Return ContextBase.CurrentUser()
+            Return ContextBase.CurrentUser(Provider)
         End Get
     End Property
 
@@ -66,14 +69,14 @@ Public Class ChangePassword
         Dim enc As New Encryption()
 
         'check if record exists in DB
-        Using reader As IDataReader = DA.Command().Param("Action", "LoginCheck").Param("Username", Page.User.Identity.Name).Param("Password", enc.EncryptText(txtOldPassword.Text.Trim())).ExecuteReader("dbo.Client_CheckAuth")
+        Using reader As ExecuteReaderResult = DefaultDataCommand.Create().Param("Action", "LoginCheck").Param("Username", Page.User.Identity.Name).Param("Password", enc.EncryptText(txtOldPassword.Text.Trim())).ExecuteReader("dbo.Client_CheckAuth")
             'will return false when a bad password is supplied
             valid = reader.Read()
             reader.Close()
         End Using
 
         If valid Then
-            DA.Command() _
+            DefaultDataCommand.Create() _
                 .Param("Action", "pwUpdate") _
                 .Param("Username", User.Identity.Name) _
                 .Param("Password", enc.EncryptText(txtNewPassword.Text.Trim())) _

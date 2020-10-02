@@ -98,6 +98,9 @@
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
     <Compile Include="RoomEntryApportionmentItem.vb" />
+    <Compile Include="UserPage.vb">
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
     <Compile Include="UserUtility.vb" />
   </ItemGroup>
   <ItemGroup>
@@ -120,9 +123,9 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\lnf\LNF.Models\LNF.Models.csproj">
-      <Project>{98c7f73d-ef9d-4a87-8b79-a1208085cfbd}</Project>
-      <Name>LNF.Models</Name>
+    <ProjectReference Include="..\..\LNF\LNF.Impl\LNF.Impl.csproj">
+      <Project>{f490b789-b824-4a8c-90fc-ac447c3277f0}</Project>
+      <Name>LNF.Impl</Name>
     </ProjectReference>
     <ProjectReference Include="..\..\lnf\LNF.WebApi\LNF.WebApi.csproj">
       <Project>{85be7662-47c8-4e82-8090-3f2bd61cc0f7}</Project>

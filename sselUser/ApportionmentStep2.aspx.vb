@@ -1,7 +1,6 @@
-﻿Imports LNF.Billing
+﻿Imports LNF.Data
+Imports LNF.Impl.Repository.Billing
 Imports LNF.Repository
-Imports LNF.Repository.Data
-Imports LNF.Repository.Billing
 Imports sselUser.AppCode
 
 Public Class ApportionmentStep2
@@ -129,20 +128,22 @@ Public Class ApportionmentStep2
     Private Sub LoadEntriesApportionment()
         If RoomID = 0 Then Return
 
-        Dim rooms As List(Of Room) = New List(Of Room)()
+        Dim allRooms As List(Of IRoom) = Provider.Data.Room.GetRooms().ToList()
+
+        Dim rooms As List(Of IRoom) = New List(Of IRoom)()
 
         'check to see if this room should have entries apportioned
-        Dim r As Room = DA.Current.Query(Of Room)().First(Function(x) x.RoomID = RoomID)
+        Dim r As IRoom = allRooms.First(Function(x) x.RoomID = RoomID)
         If r.ApportionEntryFee Then
             rooms.Add(r)
         End If
 
         'check to see if this room has children rooms that should have entries appportioned
-        Dim children As IEnumerable(Of Room) = DA.Current.Query(Of Room).Where(Function(x) x.ParentID.HasValue AndAlso x.ParentID.Value = RoomID AndAlso x.ApportionEntryFee)
+        Dim children As IEnumerable(Of IRoom) = allRooms.Where(Function(x) x.ParentID.HasValue AndAlso x.ParentID.Value = RoomID AndAlso x.ApportionEntryFee).ToList()
 
         rooms.AddRange(children)
 
-        rptRoomEntries.DataSource = rooms.Select(Function(x) RoomEntryApportionmentItem.Create(Period, UserID, x))
+        rptRoomEntries.DataSource = rooms.Select(Function(x) RoomEntryApportionmentItem.Create(Provider, Period, UserID, x))
         rptRoomEntries.DataBind()
     End Sub
 
@@ -163,7 +164,7 @@ Public Class ApportionmentStep2
                         Dim txtAccountEntries As TextBox = CType(acctItem.FindControl("txtAccountEntries"), TextBox)
                         Dim accountId As Integer = Integer.Parse(hidAccountID.Value)
                         Dim entries As Decimal = Decimal.Parse(txtAccountEntries.Text)
-                        ApportionmentManager.UpdateRoomBillingEntries(Period, UserID, roomId, accountId, entries)
+                        Provider.Billing.Apportionment.UpdateRoomBillingEntries(Period, UserID, roomId, accountId, entries)
                     End If
                 Next
             End If
@@ -183,7 +184,7 @@ Public Class ApportionmentStep2
 
     Public Function GetRoomEntryApportionmentAccountItems(r As RoomEntryApportionmentItem) As IEnumerable(Of RoomEntryApportionmentAccount)
         Dim roomBilling As IEnumerable(Of RoomBilling) = DA.Current.Query(Of RoomBilling).Where(Function(x) x.Period = r.Period AndAlso x.ClientID = r.ClientID AndAlso x.RoomID = r.RoomID)
-        Return roomBilling.Select(Function(x) RoomEntryApportionmentAccount.Create(r, x.AccountID)).OrderBy(Function(x) x.OrgID).ThenBy(Function(x) x.AccountID)
+        Return roomBilling.Select(Function(x) RoomEntryApportionmentAccount.Create(Provider, r, x.AccountID)).OrderBy(Function(x) x.OrgID).ThenBy(Function(x) x.AccountID)
     End Function
 
     Protected Sub RptAccountRoomEntries_ItemDataBound(sender As Object, e As RepeaterItemEventArgs)

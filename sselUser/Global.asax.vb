@@ -1,12 +1,14 @@
-﻿Imports LNF
-Imports LNF.Impl.DependencyInjection.Web
+﻿Imports System.Reflection
+Imports System.Web.Compilation
+Imports LNF
+Imports LNF.Web
 
 Public Class Global_asax
     Inherits HttpApplication
 
     Sub Application_Start(sender As Object, e As EventArgs)
-        Dim ioc As New IOC()
-        ServiceProvider.Current = ioc.Resolver.GetInstance(Of ServiceProvider)()
+        Dim assemblies As Assembly() = BuildManager.GetReferencedAssemblies().Cast(Of Assembly)().ToArray()
+        WebApp.Current.Bootstrap(assemblies)
 
         If ServiceProvider.Current.IsProduction() Then
             Application("AppServer") = "http://" + Environment.MachineName + ".eecs.umich.edu/"
@@ -19,7 +21,7 @@ Public Class Global_asax
         If Request.IsAuthenticated Then
             Dim ident As FormsIdentity = CType(User.Identity, FormsIdentity)
             Dim roles As String() = ident.Ticket.UserData.Split(Char.Parse("|"))
-            Context.User = New System.Security.Principal.GenericPrincipal(ident, roles)
+            Context.User = New Security.Principal.GenericPrincipal(ident, roles)
         End If
     End Sub
 

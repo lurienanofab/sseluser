@@ -1,29 +1,25 @@
 ﻿Imports System.IO
-Imports LNF.Models.Data
+Imports LNF
+Imports LNF.Data
 Imports LNF.Web
+Imports sselUser.AppCode
 
 Public Class UserMaster
     Inherits MasterPage
 
-    Private _contextBase As HttpContextBase
-
-    Protected ReadOnly Property ContextBase As HttpContextBase
+    Public ReadOnly Property UserPage As UserPage
         Get
-            Return _contextBase
+            Return CType(Page, UserPage)
         End Get
     End Property
 
     Protected ReadOnly Property CurrentUser As IClient
         Get
-            Return ContextBase.CurrentUser()
+            Return UserPage.CurrentUser
         End Get
     End Property
 
-    Protected Overrides Sub OnInit(e As EventArgs)
-        _contextBase = New HttpContextWrapper(Context)
-
-        ContextBase.CheckSession()
-
+    Protected Overrides Sub OnLoad(e As EventArgs)
         hypApporOld.Visible = CurrentUser.HasPriv(ClientPrivilege.Administrator)
 
         Select Case Path.GetFileName(Request.Path)
@@ -36,8 +32,5 @@ Public Class UserMaster
             Case "ChangePassword.aspx"
                 hypChangePW.CssClass = "nav-selected"
         End Select
-
-        MyBase.OnInit(e)
     End Sub
-
 End Class

@@ -1,41 +1,19 @@
 ﻿Imports System.Configuration
-Imports System.Web
 Imports System.Web.UI
 Imports System.Web.UI.HtmlControls
 Imports System.Web.UI.WebControls
 Imports LNF
-Imports LNF.Models
-Imports LNF.Models.Billing
-Imports LNF.Models.Data
-Imports LNF.Repository
-Imports LNF.Repository.Data
-Imports LNF.Web
+Imports LNF.Data
 Imports LNF.Web.User.Models
 Imports OnlineServices.Api
 Imports sselUser.AppCode.DAL
 
 Public MustInherit Class ApportionmentPage
-    Inherits Page
-
-    Private _contextBase As HttpContextBase
+    Inherits UserPage
 
     Protected OrgCount As Integer = 0
 
     Public MustOverride ReadOnly Property RoomDayReadOnly As Boolean
-
-    Protected ReadOnly Property ApportionmentManager As IApportionmentManager = ServiceProvider.Current.Billing.ApportionmentManager
-
-    Protected ReadOnly Property ContextBase As HttpContextBase
-        Get
-            Return _contextBase
-        End Get
-    End Property
-
-    Protected ReadOnly Property CurrentUser As IClient
-        Get
-            Return ContextBase.CurrentUser()
-        End Get
-    End Property
 
     Public ReadOnly Property UserID As Integer
         Get
@@ -77,12 +55,12 @@ Public MustInherit Class ApportionmentPage
         End Get
     End Property
 
-    Public ReadOnly Property Period As DateTime
+    Public ReadOnly Property Period As Date
         Get
             If Year = 0 OrElse Month = 0 Then
-                Return DateTime.MinValue
+                Return Date.MinValue
             Else
-                Return New DateTime(Year, Month, 1)
+                Return New Date(Year, Month, 1)
             End If
         End Get
     End Property
@@ -125,8 +103,6 @@ Public MustInherit Class ApportionmentPage
     End Sub
 
     Protected Overrides Sub OnLoad(e As EventArgs)
-        _contextBase = New HttpContextWrapper(Context)
-
         Dim btnSave As Button = GetSaveButton()
         Dim chkBilling As CheckBox = GetBillingCheckBox()
         Dim ddlMonth As DropDownList = GetMonthDropDownList()
@@ -162,8 +138,8 @@ Public MustInherit Class ApportionmentPage
                 'was called something interesting to the user was generated so we should show it.
 
                 'Check if selected date is in the past
-                Dim LastMonth As New DateTime(DateTime.Now.AddMonths(-1).Year, DateTime.Now.AddMonths(-1).Month, 1)
-                If UserUtility.IsWithinBusinessDays(DateTime.Now.Date) And Period = LastMonth Then
+                Dim LastMonth As New Date(Date.Now.AddMonths(-1).Year, Date.Now.AddMonths(-1).Month, 1)
+                If UserUtility.IsWithinBusinessDays(Date.Now.Date) And Period = LastMonth Then
                     GetSaveButton().Enabled = True
                 Else
                     If CurrentUser.HasPriv(ClientPrivilege.Administrator) Then
@@ -179,8 +155,8 @@ Public MustInherit Class ApportionmentPage
                 End If
             Else
                 'Default to previous month
-                ddlMonth.SelectedValue = DateTime.Now.AddMonths(-1).Month.ToString()
-                ddlYear.SelectedValue = DateTime.Now.AddMonths(-1).Year.ToString()
+                ddlMonth.SelectedValue = Date.Now.AddMonths(-1).Month.ToString()
+                ddlYear.SelectedValue = Date.Now.AddMonths(-1).Year.ToString()
             End If
 
             'If UserID = 0 then it's the first load (no QueryString param). It will only be -1 if
@@ -225,11 +201,21 @@ Public MustInherit Class ApportionmentPage
     ''' </summary>
     Protected Overridable Sub CreateCurrentActiveAccountsTable()
         If Session("CurrentAcct") Is Nothing OrElse Session("MultipleOrg") Is Nothing OrElse Request.QueryString("Reload") = "1" Then
-            If Period <> Date.MinValue Then
-                Dim ds As DataSet = RoomApportionmentInDaysMonthlyDA.GetAllAccountsUsed(Period, UserID, RoomID)
-                Session("CurrentAcct") = ds.Tables(0)
-                Session("MultipleOrg") = ds.Tables(1)
+            If Period = Date.MinValue Then
+                Throw New Exception("Invalid period.")
             End If
+
+            If UserID = 0 Then
+                Throw New Exception("Invalid UserID.")
+            End If
+
+            If RoomID = 0 Then
+                Throw New Exception("Invalid RoomID.")
+            End If
+
+            Dim ds As DataSet = RoomApportionmentInDaysMonthlyDA.GetAllAccountsUsed(Period, UserID, RoomID)
+            Session("CurrentAcct") = ds.Tables(0)
+            Session("MultipleOrg") = ds.Tables(1)
         End If
     End Sub
 
@@ -256,11 +242,11 @@ Public MustInherit Class ApportionmentPage
             tf = New TemplateField()
 
             Dim acctId As Integer = dr.Field(Of Integer)("AccountID")
-            Dim acc As Account = DA.Current.Single(Of Account)(acctId)
-            If String.IsNullOrEmpty(acc.ShortCode.Trim()) Then
+            Dim acct As IAccount = Provider.Data.Account.GetAccount(acctId)
+            If String.IsNullOrEmpty(acct.ShortCode.Trim()) Then
                 tf.HeaderText = dr.Field(Of String)("Name")
             Else
-                tf.HeaderText = String.Format("{0} ({1})", dr("Name"), acc.ShortCode)
+                tf.HeaderText = String.Format("{0} ({1})", dr("Name"), acct.ShortCode)
             End If
 
             tf.HeaderStyle.Width = Unit.Pixel(100)
@@ -345,7 +331,7 @@ Public MustInherit Class ApportionmentPage
         End If
 
         'ddlRoom.DataSource = RoomDB.GetAllActiveRooms()
-        ddlRoom.DataSource = DA.Current.Query(Of Room).Where(Function(x) x.Active AndAlso x.Billable AndAlso x.ApportionDailyFee).OrderBy(Function(x) x.RoomName)
+        ddlRoom.DataSource = Provider.Data.Room.GetActiveRooms().Where(Function(x) x.Billable AndAlso x.ApportionDailyFee).OrderBy(Function(x) x.RoomName).Select(Function(x) New With {x.RoomID, .RoomName = UserUtility.GetRoomName(x)})
         ddlRoom.DataBind()
 
         '2009-07-14
@@ -367,6 +353,14 @@ Public MustInherit Class ApportionmentPage
             ddlYear.SelectedValue = Year.ToString()
         End If
     End Sub
+
+    Private Function GetRoomDataSource() As IEnumerable
+        Return Provider.Data.Room.GetActiveRooms() _
+            .Where(Function(x) x.Billable AndAlso x.ApportionDailyFee) _
+            .OrderBy(Function(x) x.RoomName) _
+            .Select(Function(x) New With {x.RoomID, .RoomName = UserUtility.GetRoomName(x)}) _
+            .ToList()
+    End Function
 
     Protected Function GetEntriesValue(obj As Object) As String
         Dim item As RoomEntryApportionmentAccount = CType(obj, RoomEntryApportionmentAccount)
@@ -404,7 +398,7 @@ Public MustInherit Class ApportionmentPage
         'Loop through each row to populate the TextBox.
         'There is never more than 1 row in the GridView. (because each account is an additional column)
 
-        Dim physicalDays As Integer = ApportionmentManager.GetPhysicalDays(Period, UserID, RoomID)
+        Dim physicalDays As Integer = Provider.Billing.Apportionment.GetPhysicalDays(Period, UserID, RoomID)
         Dim minimumDays As Integer = 0
 
         If gvOrg.Rows.Count > 0 Then
@@ -414,7 +408,7 @@ Public MustInherit Class ApportionmentPage
             Dim orgId As Integer = Integer.Parse(hidOrgID.Value)
 
             ' Minimum days is the number of tool usage days per Org
-            minimumDays = ApportionmentManager.GetMinimumDays(Period, UserID, RoomID, orgId)
+            minimumDays = Provider.Billing.Apportionment.GetMinimumDays(Period, UserID, RoomID, orgId)
 
             For Each dr As DataRow In dtApp.Select(String.Format("OrgID = {0}", orgId))
                 Dim txt As TextBox = CType(gvOrg.Rows(0).FindControl("txt" + dr("AccountID").ToString()), TextBox)
@@ -471,9 +465,9 @@ Public MustInherit Class ApportionmentPage
         Dim selectedYear As Integer = Convert.ToInt32(ddlYear.SelectedValue)
 
         If selectedUserId > 0 AndAlso UpdateBilling() Then
-            Dim p As Date = New DateTime(selectedYear, selectedMonth, 1)
+            Dim p As Date = New Date(selectedYear, selectedMonth, 1)
             Session.Remove("UpdateBilling")
-            Dim model As New ApportionmentModel(ServiceProvider.Current) With {.Period = p, .ClientID = selectedUserId}
+            Dim model As New ApportionmentModel(Provider) With {.Period = p, .ClientID = selectedUserId}
             model.UpdateBillingData()
             SetLastBillingUpdateText(model)
         End If
