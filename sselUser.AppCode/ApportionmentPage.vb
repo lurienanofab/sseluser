@@ -1,11 +1,12 @@
 ﻿Imports System.Configuration
+Imports System.Data.SqlClient
 Imports System.Web.UI
 Imports System.Web.UI.HtmlControls
 Imports System.Web.UI.WebControls
 Imports LNF
+Imports LNF.Billing.Apportionment
+Imports LNF.Billing.Apportionment.Models
 Imports LNF.Data
-Imports LNF.Web.User.Models
-Imports OnlineServices.Api
 Imports sselUser.AppCode.DAL
 
 Public MustInherit Class ApportionmentPage
@@ -83,22 +84,23 @@ Public MustInherit Class ApportionmentPage
     Protected MustOverride Sub OnSave(e As CommandEventArgs)
 
     Protected litLastBillingUpdate As Literal
+    Protected phLastBillingUpdate As PlaceHolder
     Protected chkUpdateBilling As CheckBox
 
-    Protected Sub SetMessage(text As String)
-        SetMessage1(text)
-        SetMessage2(text)
+    Protected Sub SetMessage(text As String, Optional alertType As String = "danger")
+        SetMessage1(text, alertType)
+        SetMessage2(text, alertType)
     End Sub
 
-    Protected Sub SetMessage1(text As String)
+    Protected Sub SetMessage1(text As String, alertType As String)
         Dim lbl As Label = GetMessageLabel1()
-        lbl.Text = text
+        lbl.Text = $"<div class=""alert alert-{alertType}"" role=""alert"">{text}</div>"
         lbl.Visible = True
     End Sub
 
-    Protected Sub SetMessage2(text As String)
+    Protected Sub SetMessage2(text As String, alertType As String)
         Dim lbl As Label = GetMessageLabel2()
-        lbl.Text = text
+        lbl.Text = $"<div class=""alert alert-{alertType}"" role=""alert"">{text}</div>"
         lbl.Visible = True
     End Sub
 
@@ -162,27 +164,57 @@ Public MustInherit Class ApportionmentPage
             'If UserID = 0 then it's the first load (no QueryString param). It will only be -1 if
             'the DropDownList was previously loaded and no selection was made.
             If UserID = -1 Then
-                SetMessage1("Please select a user.")
+                SetMessage1("Please select a user.", "danger")
             End If
 
             GetReadonlyHidden().Value = If(RoomDayReadOnly, "1", "0")
+
+            GetLastBillingUpdateText()
         End If
 
         MyBase.OnLoad(e)
     End Sub
 
-    Protected Sub SetLastBillingUpdateText(model As ApportionmentModel)
-        If litLastBillingUpdate IsNot Nothing Then
-            Dim errmsg As String = String.Empty
+    Protected Sub SetLastBillingUpdateText(model As Web.User.Models.ApportionmentModel)
+        Dim errmsg As String = String.Empty
 
-            If model.Errors.Count() > 0 Then
-                errmsg = String.Join(Environment.NewLine + Environment.NewLine, model.Errors)
+        If model.Errors.Count() > 0 Then
+            errmsg = String.Join(Environment.NewLine + Environment.NewLine, model.Errors)
+        End If
+
+        Dim text As String = String.Format("Billing updated in {0:0.0} seconds", model.TimeTaken.TotalSeconds)
+
+        If Not String.IsNullOrEmpty(errmsg) Then
+            text += String.Format("<hr/><div style=""color: #aa0000; font-family: 'Courier New'; white-space: pre;"">{0}</div><hr/>", errmsg)
+        End If
+
+        text += Environment.NewLine + Environment.NewLine + "<!--" + Environment.NewLine
+        text += "DataCleanResult:" + Environment.NewLine
+        text += model.DataCleanResult.LogText + Environment.NewLine + Environment.NewLine
+        text += "DataResult:" + Environment.NewLine
+        text += model.DataResult.LogText + Environment.NewLine + Environment.NewLine
+        text += "Step1Result:" + Environment.NewLine
+        text += model.Step1Result.LogText + Environment.NewLine + Environment.NewLine
+        If model.PopulateSubsidyBillingResult IsNot Nothing Then
+            text += "PopulateSubsidyBillingResult:" + Environment.NewLine
+            text += model.PopulateSubsidyBillingResult.LogText + Environment.NewLine + Environment.NewLine
+        End If
+        text += "-->" + Environment.NewLine + Environment.NewLine
+
+        Session("LastBillingUpdateText") = text
+    End Sub
+
+    Protected Sub GetLastBillingUpdateText()
+        If litLastBillingUpdate IsNot Nothing AndAlso litLastBillingUpdate IsNot Nothing Then
+            Dim text As String = String.Empty
+
+            If Session("LastBillingUpdateText") IsNot Nothing Then
+                text = Session("LastBillingUpdateText").ToString()
+                Session.Remove("LastBillingUpdateText")
             End If
 
-            litLastBillingUpdate.Text = String.Format("billing updated in {0:0.0} seconds", model.TimeTaken.TotalSeconds)
-            If Not String.IsNullOrEmpty(errmsg) Then
-                litLastBillingUpdate.Text += String.Format("<hr/><div style=""color: #aa0000; font-family: 'Courier New'; white-space: pre;"">{0}</div><hr/>", errmsg)
-            End If
+            litLastBillingUpdate.Text = text
+            phLastBillingUpdate.Visible = Not String.IsNullOrEmpty(text)
         End If
     End Sub
 
@@ -238,30 +270,33 @@ Public MustInherit Class ApportionmentPage
         Dim textBoxIds As New List(Of String)
 
         'for each active account, we also create a column and create a control into that column
-        For Each dr As DataRow In rows
-            tf = New TemplateField()
+        Using conn = New SqlConnection(ConfigurationManager.ConnectionStrings("cnSselData").ConnectionString)
+            Dim repo As New Repository(conn)
+            For Each dr As DataRow In rows
+                tf = New TemplateField()
 
-            Dim acctId As Integer = dr.Field(Of Integer)("AccountID")
-            Dim acct As IAccount = Provider.Data.Account.GetAccount(acctId)
-            If String.IsNullOrEmpty(acct.ShortCode.Trim()) Then
-                tf.HeaderText = dr.Field(Of String)("Name")
-            Else
-                tf.HeaderText = String.Format("{0} ({1})", dr("Name"), acct.ShortCode)
-            End If
+                Dim acctId As Integer = dr.Field(Of Integer)("AccountID")
+                Dim acct As ApportionmentAccount = repo.GetApportionmentAccount(acctId)
+                If String.IsNullOrEmpty(acct.ShortCode.Trim()) Then
+                    tf.HeaderText = dr.Field(Of String)("Name")
+                Else
+                    tf.HeaderText = String.Format("{0} ({1})", dr("Name"), acct.ShortCode)
+                End If
 
-            tf.HeaderStyle.Width = Unit.Pixel(100)
-            tf.HeaderStyle.HorizontalAlign = HorizontalAlign.Center
-            Dim txtBoxId As String = $"txt{dr("AccountID")}"
-            If textBoxIds.Contains(txtBoxId) Then
-                Throw New Exception($"A control with ID {txtBoxId} has already been added.")
-            End If
-            Dim template As DynamicTextBoxTemplate = New DynamicTextBoxTemplate(txtBoxId, Unit.Pixel(50), 5, "numeric-text account-day-text")
-            textBoxIds.Add(txtBoxId)
-            template.AddAttribute("data-account-id", dr("AccountID").ToString())
-            template.AddAttribute("data-org-id", dr("OrgID").ToString())
-            tf.ItemTemplate = template
-            gv.Columns.Add(tf)
-        Next
+                tf.HeaderStyle.Width = Unit.Pixel(100)
+                tf.HeaderStyle.HorizontalAlign = HorizontalAlign.Center
+                Dim txtBoxId As String = $"txt{dr("AccountID")}"
+                If textBoxIds.Contains(txtBoxId) Then
+                    Throw New Exception($"A control with ID {txtBoxId} has already been added.")
+                End If
+                Dim template As New DynamicTextBoxTemplate(txtBoxId, Unit.Pixel(80), 5, "numeric-text account-day-text form-control")
+                textBoxIds.Add(txtBoxId)
+                template.AddAttribute("data-account-id", dr("AccountID").ToString())
+                template.AddAttribute("data-org-id", dr("OrgID").ToString())
+                tf.ItemTemplate = template
+                gv.Columns.Add(tf)
+            Next
+        End Using
     End Sub
 
     Protected Overridable Sub LoadMultiOrgRepeater()
@@ -289,12 +324,19 @@ Public MustInherit Class ApportionmentPage
 
             'If Rows.Count = 0 then this client does not have multiple accounts so no apportionment is needed
             If OrgCount = 0 Then
-                SetMessage1("You only have one account or did not use that room, no apportionment is needed.")
+                SetMessage1("You only have one account or did not use that room, no apportionment is needed.", "warning")
                 panDisplay.Visible = False
             Else
                 ClearMessage()
                 panDisplay.Visible = True
-                panApporUnit.Visible = OrgCount.Equals(1)
+
+                ' [2021-09-16 jg] Only allow apportionment by day, because we are now allowing greater than 100% apportionment per org (see ticket #567297).
+                Dim allowPercentageApportionment As Boolean = Boolean.Parse(ConfigurationManager.AppSettings("AllowPercentageApportionment"))
+                If allowPercentageApportionment Then
+                    panApporUnit.Visible = OrgCount.Equals(1)
+                Else
+                    panApporUnit.Visible = False
+                End If
             End If
         End If
 
@@ -330,9 +372,11 @@ Public MustInherit Class ApportionmentPage
             ddlUser.SelectedIndex = 0 ' only has himself
         End If
 
-        'ddlRoom.DataSource = RoomDB.GetAllActiveRooms()
-        ddlRoom.DataSource = Provider.Data.Room.GetActiveRooms().Where(Function(x) x.Billable AndAlso x.ApportionDailyFee).OrderBy(Function(x) x.RoomName).Select(Function(x) New With {x.RoomID, .RoomName = UserUtility.GetRoomName(x)})
-        ddlRoom.DataBind()
+        Using conn = New SqlConnection(ConfigurationManager.ConnectionStrings("cnSselData").ConnectionString)
+            Dim repo As New Repository(conn)
+            ddlRoom.DataSource = repo.GetActiveApportionmentRooms().Where(Function(x) x.Billable AndAlso x.ApportionDailyFee).OrderBy(Function(x) x.RoomName).Select(Function(x) New With {x.RoomID, .RoomName = UserUtility.GetRoomName(x)})
+            ddlRoom.DataBind()
+        End Using
 
         '2009-07-14
         'The code below would see if user comes from a dropdownlist selection or complete new entry from other pages.
@@ -354,30 +398,22 @@ Public MustInherit Class ApportionmentPage
         End If
     End Sub
 
-    Private Function GetRoomDataSource() As IEnumerable
-        Return Provider.Data.Room.GetActiveRooms() _
-            .Where(Function(x) x.Billable AndAlso x.ApportionDailyFee) _
-            .OrderBy(Function(x) x.RoomName) _
-            .Select(Function(x) New With {x.RoomID, .RoomName = UserUtility.GetRoomName(x)}) _
-            .ToList()
-    End Function
-
     Protected Function GetEntriesValue(obj As Object) As String
         Dim item As RoomEntryApportionmentAccount = CType(obj, RoomEntryApportionmentAccount)
         Return Math.Round(item.Entries, 3, MidpointRounding.AwayFromZero).ToString("#0.000")
     End Function
 
     Protected Function GetTotalEntriesValue(obj As Object) As String
-        Dim item As RoomEntryApportionmentItem = CType(obj, RoomEntryApportionmentItem)
+        Dim item As RoomEntryApportionment = CType(obj, RoomEntryApportionment)
         Return Math.Round(item.TotalEntries, 3, MidpointRounding.AwayFromZero).ToString()
     End Function
 
     ''' <summary>
     ''' This method is used for mutliple org grid databound - we want to save a database trip to the server, so data is saved in Session 
     ''' </summary>
-    Protected Overridable Function GetLabUsageDaysData() As DataSet
+    Protected Overridable Function GetLabUsageDaysData(repo As Repository) As DataSet
         If Session("LabUsageDay") Is Nothing Then
-            Session("LabUsageDay") = RoomApportionmentInDaysMonthlyDA.GetData(Period, UserID, RoomID)
+            Session("LabUsageDay") = repo.GetDataForApportion(Period, UserID, RoomID)
         End If
         Return CType(Session("LabUsageDay"), DataSet)
     End Function
@@ -390,48 +426,50 @@ Public MustInherit Class ApportionmentPage
         'This is real data assignment, the data bounded object is just a dummy object. Here we get what users truly want to see
         'Get data from Apportionment table to get the true chargedays values (we always assume the apportionment table has the accurate data)
 
-        Dim dsApp As DataSet = GetLabUsageDaysData()
-        Dim dtApp As DataTable = dsApp.Tables(0)
-        Dim dtPhysicalDates As DataTable = dsApp.Tables(1) 'it contains all the dates in a month where we should charge room fee
+        Using conn = New SqlConnection(ConfigurationManager.ConnectionStrings("cnSselData").ConnectionString)
+            Dim repo As New Repository(conn)
+            Dim dsApp As DataSet = GetLabUsageDaysData(repo)
+            Dim dtApp As DataTable = dsApp.Tables(0) ' this is every column from RoomApportionmentInDaysMonthly for the current Period, ClientID, and RoomID
+            Dim dtPhysicalDates As DataTable = dsApp.Tables(1) 'it contains all the dates in a month where we should charge room fee
 
+            'Loop through each row to populate the TextBox.
+            'There is never more than 1 row in the GridView. (because each account is an additional column)
 
-        'Loop through each row to populate the TextBox.
-        'There is never more than 1 row in the GridView. (because each account is an additional column)
+            Dim physicalDays As Integer = repo.GetPhysicalDays(Period, UserID, RoomID)
+            Dim minimumDays As Integer = 0
 
-        Dim physicalDays As Integer = Provider.Billing.Apportionment.GetPhysicalDays(Period, UserID, RoomID)
-        Dim minimumDays As Integer = 0
+            If gvOrg.Rows.Count > 0 Then
 
-        If gvOrg.Rows.Count > 0 Then
+                Dim lblMinDays As Label = CType(gvOrg.Rows(0).FindControl("lblMinDays"), Label)
+                Dim hidOrgID As HiddenField = CType(gvOrg.Rows(0).FindControl("hidOrgID"), HiddenField)
+                Dim orgId As Integer = Integer.Parse(hidOrgID.Value)
 
-            Dim lblMinDays As Label = CType(gvOrg.Rows(0).FindControl("lblMinDays"), Label)
-            Dim hidOrgID As HiddenField = CType(gvOrg.Rows(0).FindControl("hidOrgID"), HiddenField)
-            Dim orgId As Integer = Integer.Parse(hidOrgID.Value)
+                ' Minimum days is the number of tool usage days per Org
+                minimumDays = repo.GetMinimumDays(Period, UserID, RoomID, orgId)
 
-            ' Minimum days is the number of tool usage days per Org
-            minimumDays = Provider.Billing.Apportionment.GetMinimumDays(Period, UserID, RoomID, orgId)
-
-            For Each dr As DataRow In dtApp.Select(String.Format("OrgID = {0}", orgId))
-                Dim txt As TextBox = CType(gvOrg.Rows(0).FindControl("txt" + dr("AccountID").ToString()), TextBox)
-                If txt IsNot Nothing Then
-                    If Not Page.IsPostBack OrElse RoomDayReadOnly Then
-                        txt.Text = Math.Round(dr.Field(Of Decimal)("ChargeDays"), 2).ToString()
+                For Each dr As DataRow In dtApp.Select(String.Format("OrgID = {0}", orgId))
+                    Dim txt As TextBox = CType(gvOrg.Rows(0).FindControl("txt" + dr("AccountID").ToString()), TextBox)
+                    If txt IsNot Nothing Then
+                        If Not Page.IsPostBack OrElse RoomDayReadOnly Then
+                            txt.Text = Math.Round(dr.Field(Of Decimal)("ChargeDays"), 3, MidpointRounding.AwayFromZero).ToString("#0.000")
+                        End If
+                        If RoomDayReadOnly Then
+                            txt.ReadOnly = True
+                            txt.Enabled = False
+                        End If
                     End If
-                    If RoomDayReadOnly Then
-                        txt.ReadOnly = True
-                        txt.Enabled = False
-                    End If
+                Next
+
+                Dim dtMultipleOrg As DataTable = CType(Session("MultipleOrg"), DataTable)
+                If dtMultipleOrg.Rows.Count = 1 OrElse physicalDays < minimumDays Then 'minimum days = sum of account days (per org)
+                    lblMinDays.Text = physicalDays.ToString()
+                Else
+                    lblMinDays.Text = minimumDays.ToString()
                 End If
-            Next
-
-            Dim dtMultipleOrg As DataTable = CType(Session("MultipleOrg"), DataTable)
-            If dtMultipleOrg.Rows.Count = 1 OrElse physicalDays < minimumDays Then 'minimum days = sum of account days (per org)
-                lblMinDays.Text = physicalDays.ToString()
-            Else
-                lblMinDays.Text = minimumDays.ToString()
             End If
-        End If
 
-        litPhysicalDays.Text = physicalDays.ToString()
+            litPhysicalDays.Text = physicalDays.ToString()
+        End Using
         'Catch ex As Exception
         '    SetMessage1("<div style=""border-bottom: solid 1px #D2D2D2; padding-bottom: 5px;"">An error has occurred:</div><pre>" + ex.Message + Environment.NewLine + ex.StackTrace + "</pre><div style=""border-top: solid 1px #D2D2D2; padding-top: 5px;"">Please contact the system administrator.</div>")
         '    panDisplay.Visible = False
@@ -465,9 +503,9 @@ Public MustInherit Class ApportionmentPage
         Dim selectedYear As Integer = Convert.ToInt32(ddlYear.SelectedValue)
 
         If selectedUserId > 0 AndAlso UpdateBilling() Then
-            Dim p As Date = New Date(selectedYear, selectedMonth, 1)
+            Dim p As New Date(selectedYear, selectedMonth, 1)
             Session.Remove("UpdateBilling")
-            Dim model As New ApportionmentModel(Provider) With {.Period = p, .ClientID = selectedUserId}
+            Dim model As New Web.User.Models.ApportionmentModel() With {.Period = p, .ClientID = selectedUserId}
             model.UpdateBillingData()
             SetLastBillingUpdateText(model)
         End If
@@ -475,7 +513,7 @@ Public MustInherit Class ApportionmentPage
         Response.Redirect(String.Format("~/ApportionmentStep1.aspx?UserID={0}&RoomID={1}&Month={2}&Year={3}", selectedUserId, selectedRoomId, selectedMonth, selectedYear), False)
     End Sub
 
-    Protected Sub GetData_Click(ByVal sender As Object, ByVal e As EventArgs)
+    Protected Sub GetData_Click(sender As Object, e As EventArgs)
         OnGetData(e)
     End Sub
 

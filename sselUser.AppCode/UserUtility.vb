@@ -1,10 +1,11 @@
 ﻿Imports System.Web.UI.WebControls
+Imports LNF.Billing.Apportionment.Models
 Imports LNF.Data
 Imports LNF.Repository
 
 Public Class UserUtility
     Public Shared Function IsWithinBusinessDays(ByVal period As DateTime) As Boolean
-        Return DefaultDataCommand.Create(CommandType.Text).Param("CurDate", period).ExecuteScalar(Of Boolean)("SELECT dbo.udf_IsWithinBusinessDay(@CurDate, NULL)").Value
+        Return DataCommand.Create(CommandType.Text).Param("CurDate", period).ExecuteScalar(Of Boolean)("SELECT dbo.udf_IsWithinBusinessDay(@CurDate, NULL)").Value
     End Function
 
     Public Shared Function MakeTextBox(ByVal AccountID As String) As TextBox
@@ -19,7 +20,7 @@ Public Class UserUtility
     End Function
 
     Public Shared Function YearsData(ByVal Count As Integer) As DataTable
-        Dim dt As DataTable = New DataTable()
+        Dim dt As New DataTable()
         dt.Columns.Add("YearValue", GetType(Integer))
         dt.Columns.Add("YearText", GetType(String))
         For y As Integer = Date.Now.Date.Year - Count + 1 To DateTime.Now.Date.Year
@@ -51,7 +52,16 @@ Public Class UserUtility
         Dim apportionDailyFee As Boolean = dr.Field(Of Boolean)("ApportionDailyFee")
         Dim apportionEntryFee As Boolean = dr.Field(Of Boolean)("ApportionEntryFee")
 
-        Dim result As String = dr.Field(Of String)("Room")
+        Dim roomName As String = dr.Field(Of String)("Room")
+        Dim displayName As String = dr.Field(Of String)("DisplayName")
+
+        Dim result As String
+
+        If String.IsNullOrEmpty(displayName) Then
+            result = roomName
+        Else
+            result = displayName
+        End If
 
         If apportionDailyFee AndAlso Not apportionEntryFee Then
             result += " (Daily Fee)"
@@ -64,7 +74,7 @@ Public Class UserUtility
         Return result
     End Function
 
-    Public Shared Function GetRoomName(room As IRoom) As String
+    Public Shared Function GetRoomName(room As ApportionmentRoom) As String
         Dim result As String = room.RoomName
 
         If room.ApportionDailyFee AndAlso Not room.ApportionEntryFee Then

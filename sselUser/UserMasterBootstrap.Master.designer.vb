@@ -11,86 +11,86 @@ Option Strict On
 Option Explicit On
 
 
-Partial Public Class ApportionmentDefault
+Partial Public Class UserMasterBootstrap
     
     '''<summary>
-    '''ddlUser control.
+    '''head control.
     '''</summary>
     '''<remarks>
     '''Auto-generated field.
     '''To modify move field declaration from designer file to code-behind file.
     '''</remarks>
-    Protected WithEvents ddlUser As Global.System.Web.UI.WebControls.DropDownList
+    Protected WithEvents head As Global.System.Web.UI.WebControls.ContentPlaceHolder
     
     '''<summary>
-    '''btnGetData control.
+    '''form1 control.
     '''</summary>
     '''<remarks>
     '''Auto-generated field.
     '''To modify move field declaration from designer file to code-behind file.
     '''</remarks>
-    Protected WithEvents btnGetData As Global.System.Web.UI.WebControls.Button
+    Protected WithEvents form1 As Global.System.Web.UI.HtmlControls.HtmlForm
     
     '''<summary>
-    '''phAccounts control.
+    '''litSiteMenu control.
     '''</summary>
     '''<remarks>
     '''Auto-generated field.
     '''To modify move field declaration from designer file to code-behind file.
     '''</remarks>
-    Protected WithEvents phAccounts As Global.System.Web.UI.WebControls.PlaceHolder
+    Protected WithEvents litSiteMenu As Global.System.Web.UI.WebControls.Literal
     
     '''<summary>
-    '''phSaveMessage control.
+    '''hypLabTimeApportionment control.
     '''</summary>
     '''<remarks>
     '''Auto-generated field.
     '''To modify move field declaration from designer file to code-behind file.
     '''</remarks>
-    Protected WithEvents phSaveMessage As Global.System.Web.UI.WebControls.PlaceHolder
+    Protected WithEvents hypLabTimeApportionment As Global.System.Web.UI.WebControls.HyperLink
     
     '''<summary>
-    '''divSaveSaveMessage control.
+    '''hypDefaultApportionment control.
     '''</summary>
     '''<remarks>
     '''Auto-generated field.
     '''To modify move field declaration from designer file to code-behind file.
     '''</remarks>
-    Protected WithEvents divSaveSaveMessage As Global.System.Web.UI.HtmlControls.HtmlGenericControl
+    Protected WithEvents hypDefaultApportionment As Global.System.Web.UI.WebControls.HyperLink
     
     '''<summary>
-    '''litSaveMessage control.
+    '''hypChangePassword control.
     '''</summary>
     '''<remarks>
     '''Auto-generated field.
     '''To modify move field declaration from designer file to code-behind file.
     '''</remarks>
-    Protected WithEvents litSaveMessage As Global.System.Web.UI.WebControls.Literal
+    Protected WithEvents hypChangePassword As Global.System.Web.UI.WebControls.HyperLink
     
     '''<summary>
-    '''rptRooms control.
+    '''hypExitApplication control.
     '''</summary>
     '''<remarks>
     '''Auto-generated field.
     '''To modify move field declaration from designer file to code-behind file.
     '''</remarks>
-    Protected WithEvents rptRooms As Global.System.Web.UI.WebControls.Repeater
+    Protected WithEvents hypExitApplication As Global.System.Web.UI.WebControls.HyperLink
     
     '''<summary>
-    '''btnSave control.
+    '''ContentPlaceHolder1 control.
     '''</summary>
     '''<remarks>
     '''Auto-generated field.
     '''To modify move field declaration from designer file to code-behind file.
     '''</remarks>
-    Protected WithEvents btnSave As Global.System.Web.UI.WebControls.Button
+    Protected WithEvents ContentPlaceHolder1 As Global.System.Web.UI.WebControls.ContentPlaceHolder
     
     '''<summary>
-    '''litDebug control.
+    '''scripts control.
     '''</summary>
     '''<remarks>
     '''Auto-generated field.
     '''To modify move field declaration from designer file to code-behind file.
     '''</remarks>
-    Protected WithEvents litDebug As Global.System.Web.UI.WebControls.Literal
+    Protected WithEvents scripts As Global.System.Web.UI.WebControls.ContentPlaceHolder
 End Class

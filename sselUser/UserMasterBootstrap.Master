@@ -1,0 +1,78 @@
+﻿<%@ Master Language="VB" AutoEventWireup="false" CodeBehind="UserMasterBootstrap.master.vb" Inherits="sselUser.UserMasterBootstrap" %>
+
+<!doctype html>
+<html lang="en">
+<head runat="server">
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="//ssel-apps.eecs.umich.edu/static/lib/bootstrap4/css/bootstrap.min.css">
+    <link rel="stylesheet" href="styles/bootstrap-lnf.css">
+    <link rel="stylesheet" href="styles/main.css">
+
+    <title></title>
+
+    <asp:ContentPlaceHolder ID="head" runat="server">
+    </asp:ContentPlaceHolder>
+</head>
+<body>
+    <form id="form1" runat="server">
+        <asp:Literal runat="server" ID="litSiteMenu"></asp:Literal>
+        <div class="container-fluid mt-3">
+            <div class="row">
+                <div class="col-xl-2 col-lg-3">
+                    <ul class="nav nav-pills flex-column">
+                        <li class="nav-item">
+                            <asp:HyperLink runat="server" ID="hypLabTimeApportionment" CssClass="nav-link" NavigateUrl="~/ApportionmentStep1.aspx">Lab Time Apportionment</asp:HyperLink>
+                        </li>
+                        <li class="nav-item">
+                            <asp:HyperLink runat="server" ID="hypDefaultApportionment" CssClass="nav-link active" NavigateUrl="~/ApportionmentDefault.aspx">Default Apportionment</asp:HyperLink>
+                        </li>
+                        <li class="nav-item">
+                            <asp:HyperLink runat="server" ID="hypChangePassword" CssClass="nav-link" NavigateUrl="~/ChangePassword.aspx">Change Password</asp:HyperLink>
+                        </li>
+                        <li class="nav-item">
+                            <asp:HyperLink runat="server" ID="hypExitApplication" CssClass="nav-link" NavigateUrl="~/ExitApplication.aspx">Exit Application</asp:HyperLink>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="col-xl-10 col-lg-9 mt-1 mb-3 main">
+                    <asp:ContentPlaceHolder ID="ContentPlaceHolder1" runat="server">
+                    </asp:ContentPlaceHolder>
+
+                    <div class="d-none">
+                        <div class="d-block d-sm-none">XS</div>
+                        <div class="d-none d-sm-block d-md-none">S</div>
+                        <div class="d-none d-md-block d-lg-none">M</div>
+                        <div class="d-none d-lg-block d-xl-none">L</div>
+                        <div class="d-none d-xl-block">XL</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+
+    <script src="//ssel-apps.eecs.umich.edu/static/lib/jquery/jquery.min.js"></script>
+    <script src="//ssel-apps.eecs.umich.edu/static/lib/popper/2.9.0/umd/popper.min.js"></script>
+    <script src="//ssel-apps.eecs.umich.edu/static/lib/bootstrap4/js/bootstrap.min.js"></script>
+    <script src="//ssel-apps.eecs.umich.edu/static/lib/moment/moment.min.js"></script>
+    <script src="//ssel-apps.eecs.umich.edu/static/scripts/servertime.js"></script>
+
+    <script>
+        $(".current-user").each(function () {
+            var $this = $(this);
+            var timeUrl = $this.data("time-url");
+            $(".clock", $this).servertime({
+                "url": timeUrl,
+                "autostart": true
+            });
+        });
+    </script>
+
+    <asp:ContentPlaceHolder ID="scripts" runat="server">
+    </asp:ContentPlaceHolder>
+</body>
+</html>

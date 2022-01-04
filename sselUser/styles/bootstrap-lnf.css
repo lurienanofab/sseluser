@@ -1,0 +1,163 @@
+﻿a {
+    color: #5c7a94;
+}
+
+body {
+    font-size: 14px;
+}
+
+.form-control {
+    font-size: 14px;
+}
+
+.btn-primary {
+    background-color: #5c7a94;
+    border-color: #5c7a94;
+}
+
+    .btn-primary:hover {
+        background-color: #79a1c4;
+        border-color: #79a1c4;
+    }
+
+    .btn-primary.disabled,
+    .btn-primary:disabled,
+    .btn-primary.disabled:hover,
+    .btn-primary:disabled:hover {
+        background-color: #999;
+        border-color: #999;
+    }
+
+.nav-pills .nav-link.active,
+.nav-pills .show > .nav-link {
+    background-color: #5c7a94;
+}
+
+.site-menu-bs4 {
+    padding: 0;
+    background-image: url(//ssel-apps.eecs.umich.edu/static/images/menubg.gif);
+    background-repeat: repeat-x;
+    background-size: auto 65px;
+    font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+    font-size: 10pt;
+}
+
+    .site-menu-bs4 .navbar-brand {
+        padding: 0;
+    }
+
+        .site-menu-bs4 .navbar-brand img {
+            height: 65px;
+        }
+
+    .site-menu-bs4 .container-fluid {
+        padding-left: 0;
+    }
+
+    .site-menu-bs4 .nav-item {
+        padding-right: 15px;
+    }
+
+        .site-menu-bs4 .nav-item .nav-link {
+            color: #777;
+            font-weight: bold;
+        }
+
+    .site-menu-bs4 .dropdown-toggle::after {
+        content: unset;
+    }
+
+    .site-menu-bs4 .dropdown-menu,
+    .site-menu-bs4 .navbar-collapse.collapse.show {
+        background-color: #f8d94a;
+    }
+
+        .site-menu-bs4 .dropdown-menu a {
+            color: #333;
+            font-size: 8pt;
+            font-weight: bold;
+            border: 1px solid transparent;
+        }
+
+            .site-menu-bs4 .dropdown-menu a:hover {
+                background-color: #324898;
+                background: linear-gradient(#b2b5cd, #324898);
+                border: 1px solid #ff0000;
+                color: #f8d94a;
+            }
+
+    .site-menu-bs4 .current-user {
+        color: #777;
+        font-weight: bold;
+        display: block;
+        margin-right: 10px;
+        font-size: 10pt;
+    }
+
+    .site-menu-bs4 .navbar-brand.current-user {
+        flex-grow: 1;
+    }
+
+/* Extra small devices (portrait phones, less than 576px) */
+/* No media query since this is the default in Bootstrap */
+
+/* Small devices (landscape phones, 576px and up) */
+@media (min-width: 576px) {
+    .main {
+        border-top: solid 1px #ccc;
+        padding-top: 10px;
+        min-height: 0;
+    }
+
+    .site-menu-bs4 .current-user {
+        display: block;
+    }
+}
+
+.main {
+    border-top: solid 1px #ccc;
+    padding-top: 10px;
+    min-height: 0;
+}
+
+/* Medium devices (tablets, 768px and up) */
+@media (min-width: 768px) {
+    .main {
+        border-top: solid 1px #ccc;
+        padding-top: 10px;
+        min-height: 0;
+    }
+
+    .site-menu-bs4 .current-user {
+        display: block;
+    }
+}
+
+/* Large devices (desktops, 992px and up) */
+@media (min-width: 992px) {
+    .main {
+        border-left: solid 1px #ccc;
+        border-top: none;
+        padding-top: 0;
+        min-height: 600px;
+    }
+
+    .site-menu-bs4 .current-user {
+        display: block;
+    }
+}
+
+/* Extra large devices (large desktops, 1200px and up) */
+@media (min-width: 1200px) {
+    .main {
+        border-left: solid 1px #ccc;
+        border-top: none;
+        padding-top: 0;
+        min-height: 600px;
+    }
+
+    .site-menu-bs4 .current-user {
+        display: inline-block;
+        margin-right: 0;
+    }
+}

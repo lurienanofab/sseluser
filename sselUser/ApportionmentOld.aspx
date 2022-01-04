@@ -1,14 +1,8 @@
 ﻿<%@ Page Title="" Language="vb" AutoEventWireup="false" MasterPageFile="~/UserMaster.Master" CodeBehind="ApportionmentOld.aspx.vb" Inherits="sselUser.ApportionmentOld" %>
 
 <asp:Content ID="Content1" ContentPlaceHolderID="head" runat="server">
-    <script type="text/javascript">
-        $(document).ready(function () {
-            $('.numeric-text').numerictext({
-                'integer': false
-            });
-        });
-    </script>
 </asp:Content>
+
 <asp:Content ID="Content2" ContentPlaceHolderID="ContentPlaceHolder1" runat="server">
     <div style="padding: 10px;">
         <h2>Time-in-Lab Apportionment</h2>

@@ -1,7 +1,5 @@
 ﻿Imports System.IO
-Imports LNF
 Imports LNF.Data
-Imports LNF.Web
 Imports sselUser.AppCode
 
 Public Class UserMaster
@@ -13,7 +11,7 @@ Public Class UserMaster
         End Get
     End Property
 
-    Protected ReadOnly Property CurrentUser As IClient
+    Protected ReadOnly Property CurrentUser As IPrivileged
         Get
             Return UserPage.CurrentUser
         End Get
@@ -33,4 +31,8 @@ Public Class UserMaster
                 hypChangePW.CssClass = "nav-selected"
         End Select
     End Sub
+
+    Protected Function IsProduction() As Boolean
+        Return LNF.Configuration.Current.Production
+    End Function
 End Class

@@ -1,29 +1,18 @@
-﻿Imports LNF.Billing
+﻿Imports System.Configuration
+Imports System.Data.SqlClient
+Imports LNF
+Imports LNF.Billing.Apportionment
 Imports LNF.CommonTools
-Imports LNF.Data
-Imports LNF.Impl.Repository.Billing
-Imports LNF.Repository
 
 Namespace DAL
     Public Class RoomApportionmentInDaysMonthlyDA
-        ''' <summary>
-        ''' This will return a dataset with three tables
-        ''' #1 table: This user's apportion data based on room
-        ''' #2 table: The actual minimum physical days (by UNION the physical days in lab and account days of using tools)
-        ''' #3 table: User's Apportion Data
-        ''' </summary>
-        Public Shared Function GetData(ByVal period As Date, ByVal clientId As Integer, ByVal roomId As Integer) As DataSet
-            Return DefaultDataCommand.Create() _
-                .Param("Action", "ForApportion") _
-                .Param("Period", period) _
-                .Param("ClientID", clientId) _
-                .Param("RoomID", roomId) _
-                .FillDataSet("dbo.RoomApportionmentInDaysMonthly_Select")
-        End Function
-
-        Public Shared Function SelectRoomBilling(period As Date, clientId As Integer, roomId As Integer) As IList(Of RoomBilling)
-            Dim result As IList(Of RoomBilling) = DA.Current.Query(Of RoomBilling)().Where(Function(x) x.Period = period AndAlso x.ClientID = clientId AndAlso x.RoomID = roomId).ToList()
-            Return result
+        Public Shared Function SelectRoomBilling(period As Date, clientId As Integer, roomId As Integer) As DataRow()
+            Using conn = New SqlConnection(ConfigurationManager.ConnectionStrings("cnSselData").ConnectionString)
+                Dim repo As New Repository(conn)
+                Dim dt As DataTable = repo.GetRoomBillingByPeriod(period)
+                Dim rows As DataRow() = dt.Select($"ClientID = {clientId} AND RoomID = {roomId}")
+                Return rows
+            End Using
         End Function
 
         ''' <summary>
@@ -47,23 +36,26 @@ Namespace DAL
             dtOrg.Columns.Add("OrgID", GetType(Integer))
             dtOrg.Columns.Add("OrgName", GetType(String))
 
-            Dim query As IList(Of RoomBilling) = SelectRoomBilling(period, clientId, roomId)
+            Dim rows As DataRow() = SelectRoomBilling(period, clientId, roomId)
 
-            For Each rb As RoomBilling In query
+            For Each dr As DataRow In rows
                 Dim ndr As DataRow = dtRoomBilling.NewRow()
 
-                Dim org As IOrg = rb.GetOrg()
-                Dim acct As IAccount = rb.GetAccount()
+                Dim orgId As Integer = dr.Field(Of Integer)("OrgID")
+                Dim orgName As String = dr.Field(Of String)("OrgName")
+                Dim accountId As Integer = dr.Field(Of Integer)("AccountID")
+                Dim accountName As String = dr.Field(Of String)("AccountName")
+                Dim accountNumber As String = dr.Field(Of String)("AccountNumber")
 
-                ndr.SetField("AccountID", rb.AccountID)
-                ndr.SetField("Name", acct.AccountName)
-                ndr.SetField("Number", acct.AccountNumber)
-                ndr.SetField("OrgID", rb.OrgID)
-                ndr.SetField("OrgName", org.OrgName)
+                ndr.SetField("AccountID", accountId)
+                ndr.SetField("Name", accountName)
+                ndr.SetField("Number", accountNumber)
+                ndr.SetField("OrgID", orgId)
+                ndr.SetField("OrgName", orgName)
                 dtRoomBilling.Rows.Add(ndr)
             Next
 
-            Dim orgs = query.Select(Function(x) New With {x.OrgID, x.GetOrg().OrgName}).ToList()
+            Dim orgs = rows.Select(Function(x) New With {.OrgID = x.Field(Of Integer)("OrgID"), .OrgName = x.Field(Of String)("OrgName")}).ToList()
             Dim distinctOrgs = orgs.Distinct(orgs.CreateEqualityComparer(Function(x, y) x.OrgID = y.OrgID, Function(x) x.OrgID.GetHashCode())).ToList()
 
             For Each o In distinctOrgs
@@ -87,24 +79,10 @@ Namespace DAL
         ''' Get PhysicalDays and AccountDays for this account.  This is used when new account is discovered and has not been added to apportionment table
         ''' </summary>
         Public Shared Function GetAccountDaysAndPhysicalDays(ByVal Period As Date, ByVal ClientID As Integer, ByVal RoomID As Integer, ByVal AccountID As Integer) As ArrayList
-            Dim dc As IDataCommand = DefaultDataCommand.Create() _
-                .Param("Action", "ForApportion") _
-                .Param("Period", Period) _
-                .Param("ClientID", ClientID) _
-                .Param("RoomID", RoomID) _
-                .Param("AccountID", AccountID)
-
-            Using reader As ExecuteReaderResult = dc.ExecuteReader("RoomApportionmentInDaysMonthly_Select")
-                If reader.Read() Then
-                    Dim arr As New ArrayList From {
-                        reader("PhysicalDays"),
-                        reader("AccountDays")
-                    }
-
-                    Return arr
-                Else
-                    Return Nothing
-                End If
+            Using conn = New SqlConnection(ConfigurationManager.ConnectionStrings("cnSselData").ConnectionString)
+                Dim repo As New Repository(conn)
+                Dim result As ArrayList = repo.GetAccountDaysAndPhysicalDays(Period, ClientID, RoomID, AccountID)
+                Return result
             End Using
         End Function
     End Class

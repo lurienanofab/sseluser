@@ -11,8 +11,8 @@ Option Strict On
 Option Explicit On
 
 
-Partial Public Class ApportionmentDefault
-    
+Partial Public Class ApportionmentDefaultOld
+
     '''<summary>
     '''ddlUser control.
     '''</summary>
@@ -21,7 +21,16 @@ Partial Public Class ApportionmentDefault
     '''To modify move field declaration from designer file to code-behind file.
     '''</remarks>
     Protected WithEvents ddlUser As Global.System.Web.UI.WebControls.DropDownList
-    
+
+    '''<summary>
+    '''ddlRoom control.
+    '''</summary>
+    '''<remarks>
+    '''Auto-generated field.
+    '''To modify move field declaration from designer file to code-behind file.
+    '''</remarks>
+    Protected WithEvents ddlRoom As Global.System.Web.UI.WebControls.DropDownList
+
     '''<summary>
     '''btnGetData control.
     '''</summary>
@@ -30,52 +39,25 @@ Partial Public Class ApportionmentDefault
     '''To modify move field declaration from designer file to code-behind file.
     '''</remarks>
     Protected WithEvents btnGetData As Global.System.Web.UI.WebControls.Button
-    
+
     '''<summary>
-    '''phAccounts control.
+    '''panDisplay control.
     '''</summary>
     '''<remarks>
     '''Auto-generated field.
     '''To modify move field declaration from designer file to code-behind file.
     '''</remarks>
-    Protected WithEvents phAccounts As Global.System.Web.UI.WebControls.PlaceHolder
-    
+    Protected WithEvents panDisplay As Global.System.Web.UI.WebControls.Panel
+
     '''<summary>
-    '''phSaveMessage control.
+    '''gvAppDefault control.
     '''</summary>
     '''<remarks>
     '''Auto-generated field.
     '''To modify move field declaration from designer file to code-behind file.
     '''</remarks>
-    Protected WithEvents phSaveMessage As Global.System.Web.UI.WebControls.PlaceHolder
-    
-    '''<summary>
-    '''divSaveSaveMessage control.
-    '''</summary>
-    '''<remarks>
-    '''Auto-generated field.
-    '''To modify move field declaration from designer file to code-behind file.
-    '''</remarks>
-    Protected WithEvents divSaveSaveMessage As Global.System.Web.UI.HtmlControls.HtmlGenericControl
-    
-    '''<summary>
-    '''litSaveMessage control.
-    '''</summary>
-    '''<remarks>
-    '''Auto-generated field.
-    '''To modify move field declaration from designer file to code-behind file.
-    '''</remarks>
-    Protected WithEvents litSaveMessage As Global.System.Web.UI.WebControls.Literal
-    
-    '''<summary>
-    '''rptRooms control.
-    '''</summary>
-    '''<remarks>
-    '''Auto-generated field.
-    '''To modify move field declaration from designer file to code-behind file.
-    '''</remarks>
-    Protected WithEvents rptRooms As Global.System.Web.UI.WebControls.Repeater
-    
+    Protected WithEvents gvAppDefault As Global.System.Web.UI.WebControls.GridView
+
     '''<summary>
     '''btnSave control.
     '''</summary>
@@ -84,13 +66,13 @@ Partial Public Class ApportionmentDefault
     '''To modify move field declaration from designer file to code-behind file.
     '''</remarks>
     Protected WithEvents btnSave As Global.System.Web.UI.WebControls.Button
-    
+
     '''<summary>
-    '''litDebug control.
+    '''lblMsg control.
     '''</summary>
     '''<remarks>
     '''Auto-generated field.
     '''To modify move field declaration from designer file to code-behind file.
     '''</remarks>
-    Protected WithEvents litDebug As Global.System.Web.UI.WebControls.Literal
+    Protected WithEvents lblMsg As Global.System.Web.UI.WebControls.Label
 End Class

@@ -2,7 +2,7 @@
 
 Public Class ClientManagerUtility
     Public Shared Function GetAllClientsByDateAndPrivs(ByVal sDate As DateTime, ByVal eDate As DateTime, ByVal privs As Integer) As DataTable
-        Return DA.Command() _
+        Return DataCommand.Create() _
             .Param("Action", "All") _
             .Param("sDate", sDate) _
             .Param("eDate", eDate) _
@@ -11,7 +11,7 @@ Public Class ClientManagerUtility
     End Function
 
     Public Shared Function GetClientsByManagerID(ByVal sDate As DateTime, ByVal eDate As DateTime, ByVal clientId As Integer) As DataTable
-        Return DA.Command() _
+        Return DataCommand.Create() _
             .Param("Action", "ByMgr") _
             .Param("sDate", sDate) _
             .Param("eDate", eDate) _

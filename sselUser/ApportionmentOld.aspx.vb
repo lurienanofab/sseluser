@@ -1,9 +1,11 @@
 ﻿Imports System.Data.SqlClient
 Imports LNF
+Imports LNF.Billing.Apportionment.Models
 Imports LNF.CommonTools
 Imports LNF.Data
 Imports LNF.Repository
 Imports LNF.Web
+Imports LNF.Web.User
 Imports sselUser.AppCode
 Imports sselUser.AppCode.DAL
 
@@ -17,9 +19,7 @@ Public Class ApportionmentOld
     Private dsReport As DataSet
     Private sDate, eDate As Date
 
-    <Inject> Public Property Provider As IProvider
-
-    Private cnSselData As New SqlConnection(ConfigurationManager.ConnectionStrings("cnSselData").ConnectionString)
+    Private ReadOnly cnSselData As New SqlConnection(ConfigurationManager.ConnectionStrings("cnSselData").ConnectionString)
 
     Public AuthTypes As ClientPrivilege = ClientPrivilege.LabUser Or ClientPrivilege.Staff Or ClientPrivilege.Executive Or ClientPrivilege.Administrator
 
@@ -44,9 +44,9 @@ Public Class ApportionmentOld
         End Get
     End Property
 
-    Protected ReadOnly Property CurrentUser As IClient
+    Protected ReadOnly Property CurrentUser As IPrivileged
         Get
-            Return ContextBase.CurrentUser(Provider)
+            Return ContextBase.CurrentUser()
         End Get
     End Property
 
@@ -66,7 +66,7 @@ Public Class ApportionmentOld
 
         'dsReport = CType(Cache.Get(Session("Cache")), DataSet)
         dsReport = CType(Session("dsReport"), DataSet)
-        If (Not Session("ActiveTable") Is Nothing) Then
+        If (Session("ActiveTable") IsNot Nothing) Then
             If (dsReport Is Nothing) Then
                 Response.Redirect("~/")
             End If
@@ -133,7 +133,7 @@ Public Class ApportionmentOld
             eDate = sDate.AddMonths(1)
 
             If RoomDA.IsAntiPassbackRoom(CType(ddlRoom.SelectedValue, Integer)) Then
-                If (Not Session("ActiveTable") Is Nothing) Then
+                If (Session("ActiveTable") IsNot Nothing) Then
                     ReadApportGrid()
                 End If
             End If
@@ -791,25 +791,25 @@ Public Class ApportionmentOld
 
         Next
 
-        Dim updates As Integer = DA.Command().Update(dtApportFromDB, Sub(cfg)
-                                                                         'Insert prepration - it's necessary because we may have to add new account that is a remote account
-                                                                         cfg.Insert.SetCommandText("dbo.RoomApportionData_Insert")
-                                                                         cfg.Insert.AddParameter("ClientID", SqlDbType.Int)
-                                                                         cfg.Insert.AddParameter("RoomID", SqlDbType.Int)
-                                                                         cfg.Insert.AddParameter("Period", SqlDbType.DateTime)
-                                                                         cfg.Insert.AddParameter("AccountID", SqlDbType.Int)
-                                                                         cfg.Insert.AddParameter("Percentage", SqlDbType.Float)
-                                                                         cfg.Insert.AddParameter("DataSource", SqlDbType.Int)
+        Dim updates As Integer = DataCommand.Create().Update(dtApportFromDB, Sub(cfg)
+                                                                                 'Insert prepration - it's necessary because we may have to add new account that is a remote account
+                                                                                 cfg.Insert.SetCommandText("dbo.RoomApportionData_Insert")
+                                                                                 cfg.Insert.AddParameter("ClientID", SqlDbType.Int)
+                                                                                 cfg.Insert.AddParameter("RoomID", SqlDbType.Int)
+                                                                                 cfg.Insert.AddParameter("Period", SqlDbType.DateTime)
+                                                                                 cfg.Insert.AddParameter("AccountID", SqlDbType.Int)
+                                                                                 cfg.Insert.AddParameter("Percentage", SqlDbType.Float)
+                                                                                 cfg.Insert.AddParameter("DataSource", SqlDbType.Int)
 
-                                                                         'Update the data using dateset's batch update feature
-                                                                         cfg.Update.SetCommandText("dbo.RoomApportionData_Update")
-                                                                         cfg.Update.AddParameter("ClientID", SqlDbType.Int)
-                                                                         cfg.Update.AddParameter("RoomID", SqlDbType.Int)
-                                                                         cfg.Update.AddParameter("Period", SqlDbType.DateTime)
-                                                                         cfg.Update.AddParameter("AccountID", SqlDbType.Int)
-                                                                         cfg.Update.AddParameter("Percentage", SqlDbType.Float)
-                                                                         cfg.Update.AddParameter("DataSource", SqlDbType.Int)
-                                                                     End Sub)
+                                                                                 'Update the data using dateset's batch update feature
+                                                                                 cfg.Update.SetCommandText("dbo.RoomApportionData_Update")
+                                                                                 cfg.Update.AddParameter("ClientID", SqlDbType.Int)
+                                                                                 cfg.Update.AddParameter("RoomID", SqlDbType.Int)
+                                                                                 cfg.Update.AddParameter("Period", SqlDbType.DateTime)
+                                                                                 cfg.Update.AddParameter("AccountID", SqlDbType.Int)
+                                                                                 cfg.Update.AddParameter("Percentage", SqlDbType.Float)
+                                                                                 cfg.Update.AddParameter("DataSource", SqlDbType.Int)
+                                                                             End Sub)
 
         If updates >= 0 Then
             lblMsg.Text = "Data saved successfully"

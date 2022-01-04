@@ -1,28 +1,22 @@
 ﻿
 Imports System.Web
 Imports System.Web.UI
-Imports LNF
+Imports LNF.Billing.Apportionment.Models
 Imports LNF.Data
-Imports LNF.Web
+Imports LNF.Web.User
 
 Public MustInherit Class UserPage
     Inherits Page
 
-    <Inject> Public Property Provider As IProvider
-
     Public Property ContextBase As HttpContextBase
-
-    Public Property Helper As ContextHelper
 
     Protected Overrides Sub OnInit(e As EventArgs)
         ContextBase = New HttpContextWrapper(Context)
-        Helper = New ContextHelper(ContextBase, Provider)
-        Helper.CheckSession()
     End Sub
 
-    Public ReadOnly Property CurrentUser As IClient
+    Public ReadOnly Property CurrentUser As IPrivileged
         Get
-            Return Helper.CurrentUser()
+            Return ContextBase.CurrentUser()
         End Get
     End Property
 End Class

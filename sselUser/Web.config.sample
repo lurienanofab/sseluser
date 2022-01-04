@@ -21,6 +21,7 @@
   </connectionStrings>
 
   <appSettings>
+    <add key="ExitApplicationUrl" value="xxxx" />
     <add key="AdminEmails" value="xxxxx"/>
     <add key="AllowSave" value="false"/>
     <add key="ChangePasswordRedirect" value="/sselonline/Blank.aspx"/>

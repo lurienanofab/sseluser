@@ -1,6 +1,6 @@
-﻿Imports LNF.Repository
+﻿Imports System.Data.SqlClient
+Imports LNF.Billing.Apportionment
 Imports sselUser.AppCode
-Imports sselUser.AppCode.DAL
 
 Public Class ApportionmentStep1
     Inherits ApportionmentPage
@@ -81,7 +81,8 @@ Public Class ApportionmentStep1
 
     Protected Overrides Sub OnSave(e As CommandEventArgs)
         If SaveMultiOrg() Then
-            Response.Redirect(String.Format("~/ApportionmentStep2.aspx?UserID={0}&RoomID={1}&Month={2}&Year={3}&Recalculate={4}", UserID, RoomID, Month, Year, chkBilling.Checked), False)
+            'Response.Redirect(String.Format("~/ApportionmentStep2.aspx?UserID={0}&RoomID={1}&Month={2}&Year={3}&Recalculate={4}", UserID, RoomID, Month, Year, chkBilling.Checked), False)
+            Response.Redirect(String.Format("~/ApportionmentStep2.aspx?UserID={0}&RoomID={1}&Month={2}&Year={3}", UserID, RoomID, Month, Year), False)
         End If
     End Sub
 
@@ -121,13 +122,17 @@ Public Class ApportionmentStep1
             totalUserDays += usrday
 
             If Math.Round(usrday, 2) < Math.Round(minday, 2) Then
-                lblOrgMsg.Text = "The sum cannot be less than " + minday.ToString() + " day" + If(minday.Equals(1), String.Empty, "s") + "."
+                lblOrgMsg.Text = "<span class=""badge bg-danger"">The sum cannot be less than " + minday.ToString() + " day" + If(minday.Equals(1), String.Empty, "s") + ".</span>"
                 lblOrgMsg.Visible = True
                 fail = True
             ElseIf usrday > physicalDays Then
-                lblOrgMsg.Text = "The sum cannot exceed your lab physical days (" + physicalDays.ToString() + ")."
-                lblOrgMsg.Visible = True
-                fail = True
+                ' [2021-09-16 jg] Users can allocate more than physical days if they want to. Requested in ticket #567297 (https://lnf.umich.edu/helpdesk/scp/tickets.php?id=12866)
+                Dim enforcePhysicalDaysLimitPerOrg As Boolean = Boolean.Parse(ConfigurationManager.AppSettings("EnforcePhysicalDaysLimitPerOrg"))
+                If enforcePhysicalDaysLimitPerOrg Then
+                    lblOrgMsg.Text = "<span class=""badge bg-danger"">The sum cannot exceed your lab physical days (" + physicalDays.ToString() + ").</span>"
+                    lblOrgMsg.Visible = True
+                    fail = True
+                End If
             End If
         Next
 
@@ -143,117 +148,62 @@ Public Class ApportionmentStep1
 
         If fail Then Return False
 
-        'Step 2: After checking is finished, we update the data.
-        'Get the necessary data that needs to be updated into this table
-        Dim dsFromDB As DataSet = RoomApportionmentInDaysMonthlyDA.GetData(Period, UserID, RoomID)
-        Dim dtApportFromDB As DataTable = dsFromDB.Tables(0)
-        Dim dtUserApportFromDB As DataTable = dsFromDB.Tables(2) 'From RoomBillingUserApportionData
+        Using conn = New SqlConnection(ConfigurationManager.ConnectionStrings("cnSselData").ConnectionString)
+            Dim repo As New Repository(conn)
+            'Step 2: After checking is finished, we update the data.
+            'Get the necessary data that needs to be updated into this table
+            Dim ds As DataSet = repo.GetDataForApportion(Period, UserID, RoomID)
 
-        'modify current row and add new rows if necessary
-        Dim totalHours As Double = UserUtility.ConvertToDouble(dtApportFromDB.Compute("SUM(Hours)", ""), 0)
-        Dim totalEntries As Double = UserUtility.ConvertToDouble(dtApportFromDB.Compute("SUM(Entries)", ""), 0)
-        For Each dr As DataRow In dtApportFromDB.Rows
-            Dim amount As Double = GetChargeDaysFromMultiGrid(dr("OrgID").ToString(), dr("AccountID").ToString())
-            dr("ChargeDays") = amount
-            dr("IsDefault") = False
-            dr("Entries") = totalEntries * (UserUtility.ConvertToDouble(dr("ChargeDays"), 0) / totalUserDays)
-            dr("Hours") = totalHours * (UserUtility.ConvertToDouble(dr("ChargeDays"), 0) / totalUserDays)
+            Dim dtApport As DataTable = ds.Tables(0)
+            Dim dtUserApport As DataTable = ds.Tables(2) 'From RoomBillingUserApportionData
 
-            'We have to save the data back to RoomBillingUserApportionData
-            Dim drUserData As DataRow() = dtUserApportFromDB.Select("AccountID = " + dr("AccountID").ToString())
-            If drUserData.Length = 0 Then
-                Dim newrow As DataRow = dtUserApportFromDB.NewRow()
+            'modify current row and add new rows if necessary
+            Dim totalHours As Double = UserUtility.ConvertToDouble(dtApport.Compute("SUM(Hours)", String.Empty), 0)
+            Dim totalEntries As Double = UserUtility.ConvertToDouble(dtApport.Compute("SUM(Entries)", String.Empty), 0)
 
-                newrow("Period") = dr("Period")
-                newrow("ClientID") = dr("ClientID")
-                newrow("RoomID") = dr("RoomID")
-                newrow("AccountID") = dr("AccountID")
-                newrow("ChargeDays") = dr("ChargeDays")
-                newrow("Entries") = 0 'should be 0 in step 1, a value is assigned in step 2
+            For Each dr As DataRow In dtApport.Rows
+                Dim amount As Double = GetChargeDaysFromMultiGrid(dr("OrgID").ToString(), dr("AccountID").ToString())
 
-                dtUserApportFromDB.Rows.Add(newrow)
-            Else
-                drUserData(0)("ChargeDays") = dr("ChargeDays")
-            End If
-        Next
+                dr("ChargeDays") = amount
+                dr("IsDefault") = False
+                dr("Entries") = totalEntries * (amount / totalUserDays)
+                dr("Hours") = totalHours * (amount / totalUserDays)
 
-        'we have to recalculate the MonthlyRoomCharge - only apply to people who still pay monthly usage fee
-        'Remove this code after 2010/07/01
-        If RoomID = 6 Then
-            Dim array() As Integer = {5, 15, 25}
-            Dim TotalMonthlyRoomCharge As Double = 0
-            Dim totalChargeDays As Double = 0
-            Dim finalPercentage As Double = 0
-            'we loop three times based on chargetype, and for each charge type, we find out the monthly fee independently
-            For Each _chargeTypeID As Integer In array
-                Dim temprows() As DataRow = dtApportFromDB.Select(String.Format("ChargeTypeID = {0}", _chargeTypeID))
+                'We have to save the data back to RoomBillingUserApportionData
+                Dim drUserData As DataRow() = dtUserApport.Select($"AccountID = {dr("AccountID")}")
+                If drUserData.Length = 0 Then
+                    Dim ndr As DataRow = dtUserApport.NewRow()
+                    ndr("Period") = dr("Period")
+                    ndr("ClientID") = dr("ClientID")
+                    ndr("RoomID") = dr("RoomID")
+                    ndr("AccountID") = dr("AccountID")
+                    ndr("ChargeDays") = dr("ChargeDays")
+                    ndr("Entries") = 0 'should be 0 in step 1, a value is assigned in step 2
 
-                If temprows.Length > 0 Then
-                    TotalMonthlyRoomCharge = Convert.ToDouble(dtApportFromDB.Compute("SUM(MonthlyRoomCharge)", String.Format("ChargeTypeID = {0}", _chargeTypeID))) 'we have to get the total sum of clean room monthly fee, and then divide the sum proportionally in next line of code
-                    'TotalMonthlyRoomCharge = temprows(0)("MonthlyRoomCharge") 'IMPORTANT - the code above will assign the correct fee amount for each monthly account, so it's all the same among the same org type
-                    totalChargeDays = Convert.ToDouble(dtApportFromDB.Compute("SUM(ChargeDays)", String.Format("ChargeTypeID = {0}", _chargeTypeID)))
-
-                    For Each dr As DataRow In temprows
-                        If totalChargeDays > 0 Then
-                            finalPercentage = dr.Field(Of Double)("ChargeDays") / totalChargeDays
-                            dr("MonthlyRoomCharge") = TotalMonthlyRoomCharge * finalPercentage
-                        Else
-                            dr("MonthlyRoomCharge") = 0
-                        End If
-                    Next
+                    dtUserApport.Rows.Add(ndr)
+                Else
+                    drUserData(0)("ChargeDays") = dr("ChargeDays")
                 End If
             Next
-        End If
 
-        'Save to DB
-        Dim act As Action(Of UpdateConfiguration)
+            'we have to recalculate the MonthlyRoomCharge - only apply to people who still pay monthly usage fee
+            'Remove this code after 2010/07/01 [commented out 11 years later on 2021/03/19]
+            'RecalculateMonthlyRoomCharge(dtApportFromDB)
 
-        act = Sub(cfg)
-                  'Update the data using dateset's batch update feature
-                  cfg.Update.SetCommandText("dbo.RoomApportionmentInDaysMonthly_Update")
-                  cfg.Update.AddParameter("@AppID", SqlDbType.Int)
-                  cfg.Update.AddParameter("@ChargeDays", SqlDbType.Float)
-                  cfg.Update.AddParameter("@Entries", SqlDbType.Float)
-                  cfg.Update.AddParameter("@Hours", SqlDbType.Float)
-                  cfg.Update.AddParameter("@MonthlyRoomCharge", SqlDbType.Float)
-                  cfg.Update.AddParameter("@IsDefault", SqlDbType.Bit)
-              End Sub
+            'Save to DB
+            If repo.UpdateRoomApportionmentInDaysMonthly(dtApport) >= 0 Then
+                SetMessage("The apportionment data is saved.", "success")
+            Else
+                SetMessage("Saving data failed, please contact the administrator (Help menu)")
+                Return False
+            End If
 
-        If DefaultDataCommand.Create().Update(dtApportFromDB, act) >= 0 Then
-            SetMessage("The apportionment data is saved.")
-        Else
-            SetMessage("Saving data failed, please contact the administrator (Help menu)")
-            Return False
-        End If
+            'Save to RoomBillingUserApportionData
+            repo.SaveRoomBillingUserApportionData(dtUserApport)
 
-        'Save to RoomBillingUserApportionData
-        act = Sub(cfg)
-                  cfg.Insert.SetCommandText("dbo.RoomBillingUserApportionData_Insert")
-                  cfg.Insert.AddParameter("Period", SqlDbType.DateTime2)
-                  cfg.Insert.AddParameter("ClientID", SqlDbType.Int)
-                  cfg.Insert.AddParameter("RoomID", SqlDbType.Int)
-                  cfg.Insert.AddParameter("AccountID", SqlDbType.Int)
-                  cfg.Insert.AddParameter("ChargeDays", SqlDbType.Float)
-                  cfg.Insert.AddParameter("Entries", SqlDbType.Float)
-
-                  cfg.Update.SetCommandText("dbo.RoomBillingUserApportionData_Update")
-                  cfg.Update.AddParameter("AppID", SqlDbType.Int)
-                  cfg.Update.AddParameter("ChargeDays", SqlDbType.Float)
-              End Sub
-
-        DefaultDataCommand.Create().Update(dtUserApportFromDB, act)
-
-        'update child room entry apportionment based on room days
-        Provider.Billing.Apportionment.UpdateChildRoomEntryApportionment(Period, UserID, RoomID)
-
-        ' [jg 2016-09-15] This is now handled after the redirect to ApportionmentStep2.aspx
-        'If chkBilling.Checked Then
-        '    'Update the necessary billing tables
-        '    Using billingClient = Await ApiProvider.Current.NewBillingClient()
-        '        Dim step1Result As BillingProcessResult = Await billingClient.BillingProcessStep1(OnlineServices.Api.Billing.BillingCategory.Room, Period, Period.AddMonths(1), UserID, 0, False, True)
-        '        Dim step4Result As BillingProcessResult = Await billingClient.BillingProcessStep4("subsidy", Period, UserID)
-        '    End Using
-        'End If
+            'update child room entry apportionment based on room days
+            repo.UpdateChildRoomEntryApportionment(Period, UserID, RoomID)
+        End Using
 
         'Clear out saved Session data so next time we load the data is refreshed
         Session("CurrentAcct") = Nothing
@@ -262,6 +212,32 @@ Public Class ApportionmentStep1
 
         Return True
     End Function
+
+    Public Sub RecalculateMonthlyRoomCharge(dt As DataTable)
+        If RoomID = 6 Then
+            Dim array() As Integer = {5, 15, 25}
+
+            'we loop three times based on chargetype, and for each charge type, we find out the monthly fee independently
+            For Each _chargeTypeID As Integer In array
+                Dim temprows() As DataRow = dt.Select(String.Format("ChargeTypeID = {0}", _chargeTypeID))
+
+                If temprows.Length > 0 Then
+                    Dim TotalMonthlyRoomCharge As Double = Convert.ToDouble(dt.Compute("SUM(MonthlyRoomCharge)", String.Format("ChargeTypeID = {0}", _chargeTypeID)))
+                    'TotalMonthlyRoomCharge = temprows(0)("MonthlyRoomCharge") 'IMPORTANT - the code above will assign the correct fee amount for each monthly account, so it's all the same among the same org type
+                    Dim totalChargeDays As Double = Convert.ToDouble(dt.Compute("SUM(ChargeDays)", String.Format("ChargeTypeID = {0}", _chargeTypeID)))
+
+                    For Each dr As DataRow In temprows
+                        If totalChargeDays > 0 Then
+                            Dim finalPercentage As Double = dr.Field(Of Double)("ChargeDays") / totalChargeDays
+                            dr("MonthlyRoomCharge") = TotalMonthlyRoomCharge * finalPercentage
+                        Else
+                            dr("MonthlyRoomCharge") = 0
+                        End If
+                    Next
+                End If
+            Next
+        End If
+    End Sub
 
     Private Function GetChargeDaysFromMultiGrid(ByVal OrgID As String, ByVal AccountID As String) As Double
         Dim gv As GridView = Nothing

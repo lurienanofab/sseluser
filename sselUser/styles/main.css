@@ -1,58 +1,29 @@
-﻿body {
-    font-size: 12pt;
+﻿.room-entry-apportionment-account-table {
+    border-collapse: separate;
+    border-spacing: 3px;
 }
 
-.layout .left-panel {
-    width: 220px;
-}
+    .room-entry-apportionment-account-table th {
+        padding: 3px;
+        text-align: left;
+        background-color: #dcdcdc;
+    }
 
-.grid th {
-    text-align: left;
-}
+    .room-entry-apportionment-account-table td {
+        padding: 3px;
+    }
 
-.filter {
-    padding-top: 10px;
+        .room-entry-apportionment-account-table td input[type="text"] {
+            text-align: right;
+        }
+
+.billing {
+    display: none;
     padding-left: 10px;
 }
 
-    .filter select {
-        height: 24px;
+    .billing .loading {
+        background: #fff url(images/ajax-loader.gif) no-repeat left center;
+        line-height: 30px;
+        padding-left: 20px;
     }
-
-    .filter table {
-        border-collapse: collapse;
-        table-layout: fixed;
-    }
-
-        .filter table td {
-            padding-right: 5px;
-            padding-bottom: 10px;
-        }
-
-.org-name {
-    color: #003366;
-    font-weight: bold;
-    font-size: 10pt;
-}
-
-.org-grid {
-    padding: 5px;
-}
-
-.alert {
-    position: relative;
-    padding: .75rem 1.25rem;
-    margin-bottom: 1rem;
-    border: 1px solid transparent;
-    border-top-color: transparent;
-    border-right-color: transparent;
-    border-bottom-color: transparent;
-    border-left-color: transparent;
-    border-radius: .25rem;
-}
-
-.alert-danger {
-    color: #721c24;
-    background-color: #f8d7da;
-    border-color: #f5c6cb;
-}

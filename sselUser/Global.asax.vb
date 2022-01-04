@@ -1,16 +1,11 @@
-﻿Imports System.Reflection
-Imports System.Web.Compilation
-Imports LNF
-Imports LNF.Web
+﻿Imports LNF
+Imports LNF.Web.User
 
 Public Class Global_asax
     Inherits HttpApplication
 
     Sub Application_Start(sender As Object, e As EventArgs)
-        Dim assemblies As Assembly() = BuildManager.GetReferencedAssemblies().Cast(Of Assembly)().ToArray()
-        WebApp.Current.Bootstrap(assemblies)
-
-        If ServiceProvider.Current.IsProduction() Then
+        If IsProduction() Then
             Application("AppServer") = "http://" + Environment.MachineName + ".eecs.umich.edu/"
         Else
             Application("AppServer") = "/"
@@ -55,4 +50,8 @@ Public Class Global_asax
     Sub Session_Start(ByVal sender As Object, ByVal e As EventArgs)
         'LNF.Repository.Data.Client.CheckSession()
     End Sub
+
+    Function IsProduction() As Boolean
+        Return Configuration.Current.Production
+    End Function
 End Class

@@ -12,8 +12,6 @@
     <script type="text/javascript" src="//ssel-apps.eecs.umich.edu/static/lib/json2/json2.js"></script>
     <script type="text/javascript" src="//ssel-apps.eecs.umich.edu/static/lib/jquery/jquery.min.js"></script>
     <script type="text/javascript" src="//ssel-apps.eecs.umich.edu/static/lib/js-cookie/js.cookie.js"></script>
-    <script type="text/javascript" src="//ssel-apps.eecs.umich.edu/static/scripts/jquery/jquery.scrollposition.js"></script>
-    <script type="text/javascript" src="//ssel-apps.eecs.umich.edu/static/scripts/jquery/jquery.numerictext.js"></script>
     <asp:ContentPlaceHolder ID="head" runat="server">
     </asp:ContentPlaceHolder>
 </head>
@@ -43,7 +41,7 @@
     </form>
     <asp:ContentPlaceHolder runat="server" ID="scripts">
     </asp:ContentPlaceHolder>
-    <% If ServiceProvider.Current.IsProduction() Then%>
+    <% If IsProduction() Then%>
     <script type="text/javascript">
         var _gaq = _gaq || [];
         _gaq.push(['_setAccount', 'UA-23459384-2']);
