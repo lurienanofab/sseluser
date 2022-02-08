@@ -27,3 +27,8 @@
         line-height: 30px;
         padding-left: 20px;
     }
+
+.nodata {
+    font-style: italic;
+    color: #808080;
+}

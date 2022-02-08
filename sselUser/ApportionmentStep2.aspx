@@ -194,6 +194,11 @@
                                 </div>
                             </FooterTemplate>
                         </asp:Repeater>
+                        <asp:PlaceHolder runat="server" ID="phRoomEntryApportionmentNoData" Visible="false">
+                            <div class="nodata">
+                                There are no child rooms, so entry apportionment is not needed.
+                            </div>
+                        </asp:PlaceHolder>
                     </div>
                 </div>
 

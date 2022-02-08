@@ -153,8 +153,18 @@ Public Class ApportionmentStep2
             dataSource = rooms.Select(Function(x) repo.GetRoomEntryApportionmentModel(Period, UserID, x)).ToList()
         End Using
 
-        rptRoomEntries.DataSource = dataSource
-        rptRoomEntries.DataBind()
+        If dataSource.Count > 0 Then
+            phRoomEntryApportionmentNoData.Visible = False
+            btnSave.Visible = True
+            rptRoomEntries.Visible = True
+            rptRoomEntries.DataSource = dataSource
+            rptRoomEntries.DataBind()
+        Else
+            phRoomEntryApportionmentNoData.Visible = True
+            btnSave.Visible = False
+            rptRoomEntries.Visible = False
+        End If
+
     End Sub
 
     Private Sub UpdateEntriesApportionment()
