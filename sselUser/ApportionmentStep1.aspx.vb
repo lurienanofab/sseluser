@@ -71,6 +71,11 @@ Public Class ApportionmentStep1
         Return hidReadOnly
     End Function
 
+    Protected Overrides Sub SetGetDataVisible(visible As Boolean)
+        phGetData.Visible = visible
+        phAfterCutoff.Visible = Not visible
+    End Sub
+
     Protected Sub Page_Load(sender As Object, e As EventArgs) Handles Me.Load
         If Request.QueryString("ThrowError") = "1" Then
             Throw New Exception("This is a test error.")

@@ -12,7 +12,7 @@ Option Explicit On
 
 
 Partial Public Class ApportionmentStep1
-    
+
     '''<summary>
     '''ddlYear control.
     '''</summary>
@@ -21,7 +21,7 @@ Partial Public Class ApportionmentStep1
     '''To modify move field declaration from designer file to code-behind file.
     '''</remarks>
     Protected WithEvents ddlYear As Global.System.Web.UI.WebControls.DropDownList
-    
+
     '''<summary>
     '''ddlMonth control.
     '''</summary>
@@ -30,7 +30,7 @@ Partial Public Class ApportionmentStep1
     '''To modify move field declaration from designer file to code-behind file.
     '''</remarks>
     Protected WithEvents ddlMonth As Global.System.Web.UI.WebControls.DropDownList
-    
+
     '''<summary>
     '''ddlUser control.
     '''</summary>
@@ -39,7 +39,7 @@ Partial Public Class ApportionmentStep1
     '''To modify move field declaration from designer file to code-behind file.
     '''</remarks>
     Protected WithEvents ddlUser As Global.System.Web.UI.WebControls.DropDownList
-    
+
     '''<summary>
     '''ddlRoom control.
     '''</summary>
@@ -48,7 +48,16 @@ Partial Public Class ApportionmentStep1
     '''To modify move field declaration from designer file to code-behind file.
     '''</remarks>
     Protected WithEvents ddlRoom As Global.System.Web.UI.WebControls.DropDownList
-    
+
+    '''<summary>
+    '''phGetData control.
+    '''</summary>
+    '''<remarks>
+    '''Auto-generated field.
+    '''To modify move field declaration from designer file to code-behind file.
+    '''</remarks>
+    Protected WithEvents phGetData As Global.System.Web.UI.WebControls.PlaceHolder
+
     '''<summary>
     '''btnGetData control.
     '''</summary>
@@ -57,7 +66,16 @@ Partial Public Class ApportionmentStep1
     '''To modify move field declaration from designer file to code-behind file.
     '''</remarks>
     Protected WithEvents btnGetData As Global.System.Web.UI.WebControls.Button
-    
+
+    '''<summary>
+    '''phAfterCutoff control.
+    '''</summary>
+    '''<remarks>
+    '''Auto-generated field.
+    '''To modify move field declaration from designer file to code-behind file.
+    '''</remarks>
+    Protected WithEvents phAfterCutoff As Global.System.Web.UI.WebControls.PlaceHolder
+
     '''<summary>
     '''lblMsg1 control.
     '''</summary>
@@ -66,7 +84,7 @@ Partial Public Class ApportionmentStep1
     '''To modify move field declaration from designer file to code-behind file.
     '''</remarks>
     Protected WithEvents lblMsg1 As Global.System.Web.UI.WebControls.Label
-    
+
     '''<summary>
     '''panDisplay control.
     '''</summary>
@@ -75,7 +93,7 @@ Partial Public Class ApportionmentStep1
     '''To modify move field declaration from designer file to code-behind file.
     '''</remarks>
     Protected WithEvents panDisplay As Global.System.Web.UI.WebControls.Panel
-    
+
     '''<summary>
     '''hidReadOnly control.
     '''</summary>
@@ -84,7 +102,7 @@ Partial Public Class ApportionmentStep1
     '''To modify move field declaration from designer file to code-behind file.
     '''</remarks>
     Protected WithEvents hidReadOnly As Global.System.Web.UI.HtmlControls.HtmlInputHidden
-    
+
     '''<summary>
     '''litPhysicalDays control.
     '''</summary>
@@ -93,7 +111,7 @@ Partial Public Class ApportionmentStep1
     '''To modify move field declaration from designer file to code-behind file.
     '''</remarks>
     Protected WithEvents litPhysicalDays As Global.System.Web.UI.WebControls.Literal
-    
+
     '''<summary>
     '''panApporUnit control.
     '''</summary>
@@ -102,7 +120,7 @@ Partial Public Class ApportionmentStep1
     '''To modify move field declaration from designer file to code-behind file.
     '''</remarks>
     Protected WithEvents panApporUnit As Global.System.Web.UI.WebControls.Panel
-    
+
     '''<summary>
     '''rdoDay control.
     '''</summary>
@@ -111,7 +129,7 @@ Partial Public Class ApportionmentStep1
     '''To modify move field declaration from designer file to code-behind file.
     '''</remarks>
     Protected WithEvents rdoDay As Global.System.Web.UI.WebControls.RadioButton
-    
+
     '''<summary>
     '''rdoPercentage control.
     '''</summary>
@@ -120,7 +138,7 @@ Partial Public Class ApportionmentStep1
     '''To modify move field declaration from designer file to code-behind file.
     '''</remarks>
     Protected WithEvents rdoPercentage As Global.System.Web.UI.WebControls.RadioButton
-    
+
     '''<summary>
     '''rptMultiOrg control.
     '''</summary>
@@ -129,7 +147,7 @@ Partial Public Class ApportionmentStep1
     '''To modify move field declaration from designer file to code-behind file.
     '''</remarks>
     Protected WithEvents rptMultiOrg As Global.System.Web.UI.WebControls.Repeater
-    
+
     '''<summary>
     '''chkBilling control.
     '''</summary>
@@ -138,7 +156,7 @@ Partial Public Class ApportionmentStep1
     '''To modify move field declaration from designer file to code-behind file.
     '''</remarks>
     Protected WithEvents chkBilling As Global.System.Web.UI.WebControls.CheckBox
-    
+
     '''<summary>
     '''btnSave control.
     '''</summary>
@@ -147,7 +165,7 @@ Partial Public Class ApportionmentStep1
     '''To modify move field declaration from designer file to code-behind file.
     '''</remarks>
     Protected WithEvents btnSave As Global.System.Web.UI.WebControls.Button
-    
+
     '''<summary>
     '''lblMsg2 control.
     '''</summary>
@@ -156,7 +174,7 @@ Partial Public Class ApportionmentStep1
     '''To modify move field declaration from designer file to code-behind file.
     '''</remarks>
     Protected WithEvents lblMsg2 As Global.System.Web.UI.WebControls.Label
-    
+
     '''<summary>
     '''hypViewEntryApportionment control.
     '''</summary>
@@ -165,7 +183,7 @@ Partial Public Class ApportionmentStep1
     '''To modify move field declaration from designer file to code-behind file.
     '''</remarks>
     Protected WithEvents hypViewEntryApportionment As Global.System.Web.UI.WebControls.HyperLink
-    
+
     '''<summary>
     '''litDebug control.
     '''</summary>

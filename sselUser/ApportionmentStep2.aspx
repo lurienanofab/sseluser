@@ -76,8 +76,15 @@
         </div>
 
         <div class="mb-2">
-            <asp:Button runat="server" ID="btnGetData" Text="Get Data" CssClass="btn btn-primary load-button" OnClick="GetData_Click" Enabled="false" />
-            <img src="//ssel-apps.eecs.umich.edu/static/images/ajax-loader.gif" alt="Working..." class="loader" style="display: none;" />
+            <asp:PlaceHolder runat="server" ID="phGetData">
+                <asp:Button runat="server" ID="btnGetData" Text="Get Data" CssClass="btn btn-primary load-button" OnClick="GetData_Click" Enabled="false" />
+                <img src="//ssel-apps.eecs.umich.edu/static/images/ajax-loader.gif" alt="Working..." class="loader" style="display: none;" />
+            </asp:PlaceHolder>
+            <asp:PlaceHolder runat="server" ID="phAfterCutoff" Visible="false">
+                <div class="text-muted">
+                    <em>You may not apportion room charges after the fourth business day.</em>
+                </div>
+            </asp:PlaceHolder>
         </div>
 
         <div class="save-error">

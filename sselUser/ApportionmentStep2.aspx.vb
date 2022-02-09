@@ -75,6 +75,11 @@ Public Class ApportionmentStep2
         Return hidReadOnly
     End Function
 
+    Protected Overrides Sub SetGetDataVisible(visible As Boolean)
+        phGetData.Visible = visible
+        phAfterCutoff.Visible = Not visible
+    End Sub
+
     Private Function Recalculate() As Boolean
         If Not String.IsNullOrEmpty(Request.QueryString("Recalculate")) Then
             If Request.QueryString("Recalculate") = "True" Then

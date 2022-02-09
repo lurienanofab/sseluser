@@ -87,6 +87,8 @@ Public MustInherit Class ApportionmentPage
     Protected phLastBillingUpdate As PlaceHolder
     Protected chkUpdateBilling As CheckBox
 
+    Protected MustOverride Sub SetGetDataVisible(visible As Boolean)
+
     Protected Sub SetMessage(text As String, Optional alertType As String = "danger")
         SetMessage1(text, alertType)
         SetMessage2(text, alertType)
@@ -135,16 +137,22 @@ Public MustInherit Class ApportionmentPage
             'Load the filter controls and set selected values
             SetupFilter()
 
+            Dim lastMonth As New Date(Date.Now.AddMonths(-1).Year, Date.Now.AddMonths(-1).Month, 1)
+            Dim withinBusinessDayCutoff As Boolean = UserUtility.IsWithinBusinessDays(Date.Now.Date) And Period = lastMonth
+            Dim isAdmin As Boolean = CurrentUser.HasPriv(ClientPrivilege.Administrator)
+
+            ' hides the Get Data button unless within the business day cutoff or current user is administrator
+            SetGetDataVisible(withinBusinessDayCutoff OrElse isAdmin)
+
             If RoomID > 0 And UserID > 0 Then
                 'To get here the user must have clicked the "Get Data" button. This means that when LoadMultiOrgRepeater
                 'was called something interesting to the user was generated so we should show it.
 
                 'Check if selected date is in the past
-                Dim LastMonth As New Date(Date.Now.AddMonths(-1).Year, Date.Now.AddMonths(-1).Month, 1)
-                If UserUtility.IsWithinBusinessDays(Date.Now.Date) And Period = LastMonth Then
+                If withinBusinessDayCutoff Then
                     GetSaveButton().Enabled = True
                 Else
-                    If CurrentUser.HasPriv(ClientPrivilege.Administrator) Then
+                    If isAdmin Then
                         btnSave.Enabled = True
                         chkBilling.Visible = True
                     End If

@@ -50,6 +50,15 @@ Partial Public Class ApportionmentStep2
     Protected WithEvents ddlRoom As Global.System.Web.UI.WebControls.DropDownList
 
     '''<summary>
+    '''phGetData control.
+    '''</summary>
+    '''<remarks>
+    '''Auto-generated field.
+    '''To modify move field declaration from designer file to code-behind file.
+    '''</remarks>
+    Protected WithEvents phGetData As Global.System.Web.UI.WebControls.PlaceHolder
+
+    '''<summary>
     '''btnGetData control.
     '''</summary>
     '''<remarks>
@@ -57,6 +66,15 @@ Partial Public Class ApportionmentStep2
     '''To modify move field declaration from designer file to code-behind file.
     '''</remarks>
     Protected WithEvents btnGetData As Global.System.Web.UI.WebControls.Button
+
+    '''<summary>
+    '''phAfterCutoff control.
+    '''</summary>
+    '''<remarks>
+    '''Auto-generated field.
+    '''To modify move field declaration from designer file to code-behind file.
+    '''</remarks>
+    Protected WithEvents phAfterCutoff As Global.System.Web.UI.WebControls.PlaceHolder
 
     '''<summary>
     '''lblMsg1 control.
