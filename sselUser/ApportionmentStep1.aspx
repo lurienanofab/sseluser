@@ -92,7 +92,7 @@
             </asp:PlaceHolder>
             <asp:PlaceHolder runat="server" ID="phAfterCutoff" Visible="false">
                 <div class="text-muted">
-                    <em>You may not apportion room charges after the fourth business day.</em>
+                    <em>You may not apportion room charges on or after the fourth business day of the month.</em>
                 </div>
             </asp:PlaceHolder>
             <asp:PlaceHolder runat="server" ID="phLastBillingUpdate" Visible="false">

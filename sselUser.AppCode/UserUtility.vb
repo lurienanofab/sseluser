@@ -1,14 +1,13 @@
 ﻿Imports System.Web.UI.WebControls
 Imports LNF.Billing.Apportionment.Models
-Imports LNF.Data
 Imports LNF.Repository
 
 Public Class UserUtility
-    Public Shared Function IsWithinBusinessDays(ByVal period As DateTime) As Boolean
+    Public Shared Function IsWithinBusinessDays(period As Date) As Boolean
         Return DataCommand.Create(CommandType.Text).Param("CurDate", period).ExecuteScalar(Of Boolean)("SELECT dbo.udf_IsWithinBusinessDay(@CurDate, NULL)").Value
     End Function
 
-    Public Shared Function MakeTextBox(ByVal AccountID As String) As TextBox
+    Public Shared Function MakeTextBox(AccountID As String) As TextBox
         Dim result As New TextBox With {
             .ID = "txt" + AccountID,
             .Width = Unit.Pixel(25),
@@ -19,17 +18,17 @@ Public Class UserUtility
         Return result
     End Function
 
-    Public Shared Function YearsData(ByVal Count As Integer) As DataTable
+    Public Shared Function YearsData(Count As Integer) As DataTable
         Dim dt As New DataTable()
         dt.Columns.Add("YearValue", GetType(Integer))
         dt.Columns.Add("YearText", GetType(String))
-        For y As Integer = Date.Now.Date.Year - Count + 1 To DateTime.Now.Date.Year
+        For y As Integer = Date.Now.Date.Year - Count + 1 To Date.Now.Date.Year
             dt.Rows.Add(y, y.ToString())
         Next
         Return dt
     End Function
 
-    Public Shared Function ConvertToDouble(ByVal val As Object, ByVal defval As Double) As Double
+    Public Shared Function ConvertToDouble(val As Object, defval As Double) As Double
         If val Is Nothing Then Return defval
         If val.Equals(DBNull.Value) Then Return defval
         If val.ToString() = String.Empty Then Return defval
