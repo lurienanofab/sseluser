@@ -31,6 +31,11 @@ Public Class _500
         litMessage.Text = ex.Message
         phStackTrace.Visible = True
         litStackTrace.Text = ex.StackTrace
-        SendEmail.SendErrorEmail(ex, Nothing, ContextBase.CurrentUser(), "sselUser", ContextBase.CurrentIP(), ContextBase.Request.Url)
+        Dim client As IPrivileged = Nothing
+        If ContextBase.Session IsNot Nothing Then
+            client = ContextBase.CurrentUser()
+            SendEmail.SendErrorEmail(ex, Nothing, ContextBase.CurrentUser(), "sselUser", ContextBase.CurrentIP(), ContextBase.Request.Url)
+        End If
+        SendEmail.SendErrorEmail(ex, Nothing, client, "sselUser", ContextBase.CurrentIP(), ContextBase.Request.Url)
     End Sub
 End Class

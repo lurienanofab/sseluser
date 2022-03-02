@@ -36,13 +36,13 @@
         <div class="row mb-3">
             <label for="ddlYear" class="col-xl-1 col-md-2 col-sm-3 col-form-label" style="min-width: 120px;">Select Time:</label>
             <div class="col-md-5">
-                <asp:DropDownList runat="server" ID="ddlYear" DataValueField="YearValue" DataTextField="YearText" AutoPostBack="True" CssClass="year-select form-control" ClientIDMode="Static">
+                <asp:DropDownList runat="server" ID="ddlYear" DataValueField="YearValue" DataTextField="YearText" AutoPostBack="True" CssClass="year-select form-control" ClientIDMode="Static" OnSelectedIndexChanged="PeriodSelect_SelectedIndexChanged">
                     <asp:ListItem Value="2009">2009</asp:ListItem>
                     <asp:ListItem Value="2010">2010</asp:ListItem>
                     <asp:ListItem Value="2011">2011</asp:ListItem>
                     <asp:ListItem Value="2012">2012</asp:ListItem>
                 </asp:DropDownList>
-                <asp:DropDownList runat="server" ID="ddlMonth" AutoPostBack="True" CssClass="month-select form-control">
+                <asp:DropDownList runat="server" ID="ddlMonth" AutoPostBack="True" CssClass="month-select form-control" OnSelectedIndexChanged="PeriodSelect_SelectedIndexChanged">
                     <asp:ListItem Value="1">January</asp:ListItem>
                     <asp:ListItem Value="2">February</asp:ListItem>
                     <asp:ListItem Value="3">March</asp:ListItem>

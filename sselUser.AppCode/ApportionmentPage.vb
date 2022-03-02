@@ -87,7 +87,7 @@ Public MustInherit Class ApportionmentPage
     Protected phLastBillingUpdate As PlaceHolder
     Protected chkUpdateBilling As CheckBox
 
-    Protected MustOverride Sub SetGetDataVisible(visible As Boolean)
+    Protected MustOverride Sub SetGetDataVisible()
 
     Protected Sub SetMessage(text As String, Optional alertType As String = "danger")
         SetMessage1(text, alertType)
@@ -137,19 +137,14 @@ Public MustInherit Class ApportionmentPage
             'Load the filter controls and set selected values
             SetupFilter()
 
-            Dim lastMonth As New Date(Date.Now.AddMonths(-1).Year, Date.Now.AddMonths(-1).Month, 1)
-            Dim withinBusinessDayCutoff As Boolean = UserUtility.IsWithinBusinessDays(Date.Now.Date) And Period = lastMonth
-            Dim isAdmin As Boolean = CurrentUser.HasPriv(ClientPrivilege.Administrator)
-
-            ' hides the Get Data button unless within the business day cutoff or current user is administrator
-            SetGetDataVisible(withinBusinessDayCutoff OrElse isAdmin)
+            Dim isAdmin As Boolean = CurrentUserIsAdmin()
 
             If RoomID > 0 And UserID > 0 Then
                 'To get here the user must have clicked the "Get Data" button. This means that when LoadMultiOrgRepeater
                 'was called something interesting to the user was generated so we should show it.
 
                 'Check if selected date is in the past
-                If withinBusinessDayCutoff Then
+                If IsWithinBusinessDayCutoff(Period) Then
                     GetSaveButton().Enabled = True
                 Else
                     If isAdmin Then
@@ -165,8 +160,9 @@ Public MustInherit Class ApportionmentPage
                 End If
             Else
                 'Default to previous month
-                ddlMonth.SelectedValue = Date.Now.AddMonths(-1).Month.ToString()
-                ddlYear.SelectedValue = Date.Now.AddMonths(-1).Year.ToString()
+                Dim prevMonth As Date = GetPreviousMonth()
+                ddlMonth.SelectedValue = prevMonth.Month.ToString()
+                ddlYear.SelectedValue = prevMonth.Year.ToString()
             End If
 
             'If UserID = 0 then it's the first load (no QueryString param). It will only be -1 if
@@ -178,10 +174,27 @@ Public MustInherit Class ApportionmentPage
             GetReadonlyHidden().Value = If(RoomDayReadOnly, "1", "0")
 
             GetLastBillingUpdateText()
+
+            ' hides the Get Data button unless within the business day cutoff or current user is administrator
+            SetGetDataVisible()
         End If
 
         MyBase.OnLoad(e)
     End Sub
+
+    Protected Function CurrentUserIsAdmin() As Boolean
+        Return CurrentUser.HasPriv(ClientPrivilege.Administrator Or ClientPrivilege.Developer)
+    End Function
+
+    Protected Function IsWithinBusinessDayCutoff(p As Date) As Boolean
+        Return UserUtility.IsWithinBusinessDays(Date.Now.Date) AndAlso p = GetPreviousMonth()
+    End Function
+
+    Protected Function IsGetDataVisible() As Boolean
+        Dim selectedPeriod As Date = GetSelectedPeriod()
+        Dim visible As Boolean = IsWithinBusinessDayCutoff(selectedPeriod) OrElse CurrentUserIsAdmin()
+        Return visible
+    End Function
 
     Protected Sub SetLastBillingUpdateText(model As Web.User.Models.ApportionmentModel)
         Dim errmsg As String = String.Empty
@@ -487,8 +500,8 @@ Public MustInherit Class ApportionmentPage
     Protected Overridable Sub OnGetData(e As EventArgs)
         Dim ddlUser As DropDownList = GetUserDropDownList()
         Dim ddlRoom As DropDownList = GetRoomDropDownList()
-        Dim ddlMonth As DropDownList = GetMonthDropDownList()
-        Dim ddlYear As DropDownList = GetYearDropDownList()
+        'Dim ddlMonth As DropDownList = GetMonthDropDownList()
+        'Dim ddlYear As DropDownList = GetYearDropDownList()
 
         Session("CurrentAcct") = Nothing
         Session("MultipleOrg") = Nothing
@@ -507,19 +520,37 @@ Public MustInherit Class ApportionmentPage
         'This is the only time the variables are read from the form input elements. All the processing uses QueryString params
         Dim selectedUserId As Integer = Convert.ToInt32(ddlUser.SelectedValue)
         Dim selectedRoomId As Integer = Convert.ToInt32(ddlRoom.SelectedValue)
-        Dim selectedMonth As Integer = Convert.ToInt32(ddlMonth.SelectedValue)
-        Dim selectedYear As Integer = Convert.ToInt32(ddlYear.SelectedValue)
+        'Dim selectedMonth As Integer = Convert.ToInt32(ddlMonth.SelectedValue)
+        'Dim selectedYear As Integer = Convert.ToInt32(ddlYear.SelectedValue)
+
+        Dim p As Date = GetSelectedPeriod()
 
         If selectedUserId > 0 AndAlso UpdateBilling() Then
-            Dim p As New Date(selectedYear, selectedMonth, 1)
             Session.Remove("UpdateBilling")
             Dim model As New Web.User.Models.ApportionmentModel() With {.Period = p, .ClientID = selectedUserId}
             model.UpdateBillingData()
             SetLastBillingUpdateText(model)
         End If
 
-        Response.Redirect(String.Format("~/ApportionmentStep1.aspx?UserID={0}&RoomID={1}&Month={2}&Year={3}", selectedUserId, selectedRoomId, selectedMonth, selectedYear), False)
+        Response.Redirect(String.Format("~/ApportionmentStep1.aspx?UserID={0}&RoomID={1}&Month={2}&Year={3}", selectedUserId, selectedRoomId, p.Month, p.Year), False)
     End Sub
+
+    Protected Function GetSelectedPeriod() As Date
+        Dim ddlMonth As DropDownList = GetMonthDropDownList()
+        Dim ddlYear As DropDownList = GetYearDropDownList()
+
+        Dim selectedMonth As Integer = Convert.ToInt32(ddlMonth.SelectedValue)
+        Dim selectedYear As Integer = Convert.ToInt32(ddlYear.SelectedValue)
+
+        Dim result As New Date(selectedYear, selectedMonth, 1)
+
+        Return result
+    End Function
+
+    Protected Function GetPreviousMonth() As Date
+        Dim result As New Date(Date.Now.AddMonths(-1).Year, Date.Now.AddMonths(-1).Month, 1)
+        Return result
+    End Function
 
     Protected Sub GetData_Click(sender As Object, e As EventArgs)
         OnGetData(e)

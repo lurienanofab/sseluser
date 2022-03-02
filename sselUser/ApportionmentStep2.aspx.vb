@@ -75,9 +75,10 @@ Public Class ApportionmentStep2
         Return hidReadOnly
     End Function
 
-    Protected Overrides Sub SetGetDataVisible(visible As Boolean)
+    Protected Overrides Sub SetGetDataVisible()
+        Dim visible As Boolean = IsGetDataVisible()
         phGetData.Visible = visible
-        phAfterCutoff.Visible = Not visible
+        phAfterCutoff.Visible = Not Visible
     End Sub
 
     Private Function Recalculate() As Boolean
@@ -238,4 +239,8 @@ Public Class ApportionmentStep2
     Protected Function ShowShortCodeColumn() As Boolean
         Return _showShortCodeColumn
     End Function
+
+    Protected Sub PeriodSelect_SelectedIndexChanged(sender As Object, e As EventArgs)
+        SetGetDataVisible()
+    End Sub
 End Class

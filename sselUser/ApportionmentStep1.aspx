@@ -40,17 +40,22 @@
         Please note: As of January 1, 2015 the Clean Room and ROBIN labs have been combined for daily fee apportionment. Room entry apportionment is now available by specific room.
     </div>
 
+    <div class="alert alert-danger" role="alert">
+        There is currently an issue with this page that prevents saving apportionment. We hope to have it resolved quickly.<br />
+        If you are unable to apportion by the end of day tomorrow please send an email to <a href="mailto:lnf-billing@umich.edu">lnf-billing@umich.edu</a> with the correct distribution.
+    </div>
+
     <div class="filter">
         <div class="row mb-3">
             <label for="ddlYear" class="col-xl-1 col-md-2 col-sm-3 col-form-label" style="min-width: 120px;">Select Time:</label>
             <div class="col-md-5">
-                <asp:DropDownList runat="server" ID="ddlYear" DataValueField="YearValue" DataTextField="YearText" AutoPostBack="True" CssClass="year-select form-control" ClientIDMode="Static">
+                <asp:DropDownList runat="server" ID="ddlYear" DataValueField="YearValue" DataTextField="YearText" AutoPostBack="True" CssClass="year-select form-control" ClientIDMode="Static" OnSelectedIndexChanged="PeriodSelect_SelectedIndexChanged">
                     <asp:ListItem Value="2009">2009</asp:ListItem>
                     <asp:ListItem Value="2010">2010</asp:ListItem>
                     <asp:ListItem Value="2011">2011</asp:ListItem>
                     <asp:ListItem Value="2012">2012</asp:ListItem>
                 </asp:DropDownList>
-                <asp:DropDownList runat="server" ID="ddlMonth" AutoPostBack="True" CssClass="month-select form-control">
+                <asp:DropDownList runat="server" ID="ddlMonth" AutoPostBack="True" CssClass="month-select form-control" OnSelectedIndexChanged="PeriodSelect_SelectedIndexChanged">
                     <asp:ListItem Value="1">January</asp:ListItem>
                     <asp:ListItem Value="2">February</asp:ListItem>
                     <asp:ListItem Value="3">March</asp:ListItem>
@@ -137,7 +142,7 @@
                         </asp:Panel>
                         <div>
                             <asp:Repeater runat="server" ID="rptMultiOrg" OnItemDataBound="MultiOrg_ItemDataBound">
-                                <ItemTemplate>
+                                <itemtemplate>
                                     <div style="padding: 10px 0px 10px 0px;">
                                         <input type="hidden" runat="server" id="hidOrgID" value='<%#Eval("OrgID") %>' class="org-id" />
                                         <div class="org-name">
@@ -145,15 +150,15 @@
                                         </div>
                                         <div class="org-grid">
                                             <asp:GridView ID="gvOrg" runat="server" AutoGenerateColumns="false" OnDataBound="Org_DataBound" CssClass="grid" EnableViewState="true">
-                                                <RowStyle CssClass="item" />
-                                                <AlternatingRowStyle CssClass="item" />
+                                                <rowstyle cssclass="item" />
+                                                <alternatingrowstyle cssclass="item" />
                                             </asp:GridView>
                                         </div>
                                         <div style="padding-left: 5px;">
                                             <asp:Label ID="lblOrgMsg" runat="server" CssClass="error"></asp:Label>
                                         </div>
                                     </div>
-                                </ItemTemplate>
+                                </itemtemplate>
                             </asp:Repeater>
                         </div>
                     </div>
